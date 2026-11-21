@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Financial Settlement – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      
+      <div class="card card-custom p-4">
+        <h4 class="fw-bold text-navy mb-1"><i class="bi bi-wallet2 text-success me-2"></i> Financial Settlement & Fee Adjustment</h4>
+        <p class="text-muted small mb-4">Proposal Reference: <span class="fw-bold text-primary">{{ proposal.proposal_code }}</span></p>
+
+        {% if my_fin %}
+          <div class="card bg-light p-3 mb-4 border">
+            <h5 class="fw-bold text-navy border-bottom pb-2 mb-3">Your Transfer Account Summary</h5>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <span class="text-muted small">Moving From:</span>
+                <div class="fw-bold">{{ my_fin.from_bed.full_code }} ({{ my_fin.from_bed.room.category.name }})</div>
+                <div class="small text-muted">Annual Room Fee: ₹{{ my_fin.old_fee|floatformat:0 }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <span class="text-muted small">Moving To:</span>
+                <div class="fw-bold text-success">{{ my_fin.to_bed.full_code }} ({{ my_fin.to_bed.room.category.name }})</div>
+                <div class="small text-muted">Annual Room Fee: ₹{{ my_fin.new_fee|floatformat:0 }}</div>
+              </div>
+
+              <div class="col-12"><hr class="my-2"></div>
+
+              <div class="col-6 col-md-3">
+                <span class="text-muted small">Annual Difference</span>
+                <div class="fw-bold">
+                  {% if my_fin.raw_difference > 0 %}
+                    <span class="text-danger">+₹{{ my_fin.fee_difference_payable|floatformat:0 }}</span>
+                  {% elif my_fin.raw_difference < 0 %}
+                    <span class="text-success">-₹{{ my_fin.advance_credit_generated|floatformat:0 }} (Credit)</span>
+                  {% else %}
+                    ₹0
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <span class="text-muted small">Processing Fee</span>
+                <div class="fw-bold">₹{{ my_fin.processing_fee|floatformat:0 }}</div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <span class="text-muted small">Advance Balance Used</span>
+                <div class="fw-bold text-warning">₹{{ my_fin.advance_used|floatformat:0 }}</div>
+                <small class="text-muted" style="font-size:0.65rem;">(Available: ₹{{ my_fin.available_advance|floatformat:0 }})</small>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <span class="text-muted small">Net Amount Payable</span>
+                <div class="stat-val text-primary my-0" style="font-size:1.4rem;">
+                  ₹{{ my_fin.net_payable|floatformat:0 }}
+                </div>
+              </div>
+            </div>
+
+            {% if my_fin.advance_credit_generated > 0 %}
+              <div class="alert alert-info py-2 px-3 mt-3 mb-0 small">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                Moving to a lower-fee room generates <b>₹{{ my_fin.advance_credit_generated|floatformat:0 }}</b> in advance credit. Per university policy, no cash refunds are issued; this amount is saved in your account for the next academic year.
+              </div>
+            {% endif %}
+          </div>
+
+          {% if not my_fin.is_settled %}
+            <form method="post" action="{% url 'financial_settle' proposal.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="simulate_payment" value="1">
+              {% if not participant %}
+                <!-- Admin choosing participant -->
+                <input type="hidden" name="participant_id" value="{{ my_fin.participant.id }}">
+              {% endif %}
+
+              <div class="alert alert-light border small text-muted mb-4">
+                <i class="bi bi-shield-lock-fill text-primary me-1"></i>
+                <b>Notice:</b> This transaction will be processed using the simulated local test payment module. No actual funds will be transferred.
+              </div>
+
+              <div class="d-flex justify-content-between">
+                <a href="{% url 'proposal_detail' proposal.id %}" class="btn btn-outline-secondary">Back to Proposal</a>
+                <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
+                  <i class="bi bi-credit-card me-1"></i> Pay ₹{{ my_fin.net_payable|floatformat:0 }} (Simulated Settlement)
+                </button>
+              </div>
+            </form>
+          {% else %}
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-4">
+              <i class="bi bi-check-circle-fill fs-4"></i>
+              <div>
+                <strong>Financial Settlement Verified!</strong> All dues for this room exchange proposal have been paid.
+              </div>
+            </div>
+            <a href="{% url 'proposal_detail' proposal.id %}" class="btn btn-primary">Return to Proposal &rarr;</a>
+          {% endif %}
+
+        {% endif %}
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

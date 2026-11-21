@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Bookings & Direct Allotment – Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Direct Room Bookings & Allotment Console</h3>
+      <p class="text-muted small mb-0">View all direct student bookings or manually assign any student to any vacant bed</p>
+    </div>
+    <a href="{% url 'admin_overview' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to Admin Hub</a>
+  </div>
+
+  <!-- Manual Direct Allotment Tool -->
+  <div class="card card-custom p-4 mb-4 border-primary">
+    <h5 class="fw-bold text-navy mb-2"><i class="bi bi-person-plus-fill text-primary me-2"></i> Administrative Direct Bed Allotment Tool</h5>
+    <p class="text-muted small mb-3">Admin can directly allocate any unallocated student to any vacant bed on campus immediately.</p>
+
+    <form method="post" action="{% url 'admin_manual_allot' %}" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-12 col-md-5">
+        <label class="form-label small fw-bold">Select Student</label>
+        <select name="student_id" class="form-select form-select-sm" required>
+          <option value="" disabled selected>-- Select an unallocated student --</option>
+          {% for stu in unallocated_students %}
+            <option value="{{ stu.id }}">{{ stu.full_name }} ({{ stu.student_id }}) - {{ stu.gender }} • {{ stu.course }}</option>
+          {% empty %}
+            <option disabled>No unallocated students found.</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-5">
+        <label class="form-label small fw-bold">Select Vacant Bed</label>
+        <select name="bed_id" class="form-select form-select-sm" required>
+          <option value="" disabled selected>-- Select a vacant bed --</option>
+          {% for b in vacant_beds %}
+            <option value="{{ b.id }}">{{ b.full_code }} ({{ b.room.hostel.name }} - {{ b.room.category.name }})</option>
+          {% empty %}
+            <option disabled>No vacant beds currently available.</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">
+          <i class="bi bi-check-circle me-1"></i> Allot Bed
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- All Bookings Table -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-receipt-cutoff text-primary"></i> Master Room Allotment Records</h5>
+      <span class="badge bg-secondary">{{ bookings.count }} Total Bookings</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Booking ID</th>
+              <th>Student Name</th>
+              <th>Student ID</th>
+              <th>Hostel</th>
+              <th>Allotted Bed</th>
+              <th>Annual Fee</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th class="text-end">Certificate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr>
+                <td class="fw-bold text-primary">{{ b.booking_id }}</td>
+                <td>{{ b.student.full_name }}</td>
+                <td>{{ b.student.student_id }}</td>
+                <td>{{ b.bed.room.hostel.code }}</td>
+                <td class="fw-bold text-success">{{ b.bed.full_code }}</td>
+                <td class="fw-bold">₹{{ b.annual_fee|floatformat:0 }}</td>
+                <td class="text-muted">{{ b.booking_date|date:"M d, Y H:i" }}</td>
+                <td><span class="badge bg-success">{{ b.status }}</span></td>
+                <td class="text-end">
+                  <a href="{% url 'booking_receipt' b.id %}" target="_blank" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                    <i class="bi bi-file-earmark-text me-1"></i> View Order
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" class="text-center text-muted p-4">No direct bookings logged yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

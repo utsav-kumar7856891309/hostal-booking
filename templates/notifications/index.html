@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Notifications – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Notification Center</h3>
+      <p class="text-muted small mb-0">All room exchange alerts, peer decisions, warden authorizations and campus notices</p>
+    </div>
+
+    <form method="post" action="{% url 'notifications_index' %}">
+      {% csrf_token %}
+      <button type="submit" name="mark_all_read" value="1" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-check2-all me-1"></i> Mark All as Read
+      </button>
+    </form>
+  </div>
+
+  <div class="card card-custom">
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        {% for notif in notifications %}
+          <li class="list-group-item p-3 {% if not notif.is_read %}bg-light border-start border-4 border-primary{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="fw-bold text-navy mb-1">{{ notif.title }}</h6>
+                <p class="text-secondary small mb-1">{{ notif.message }}</p>
+                <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ notif.created_at|timesince }} ago</small>
+              </div>
+
+              <div class="text-end">
+                {% if notif.link %}
+                  <a href="{% url 'mark_read' notif.id %}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                    Open <i class="bi bi-arrow-right"></i>
+                  </a>
+                {% elif not notif.is_read %}
+                  <a href="{% url 'mark_read' notif.id %}" class="btn btn-sm btn-light text-muted">
+                    Mark Read
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item p-5 text-center text-muted">
+            <i class="bi bi-bell-slash fs-2 d-block mb-2"></i>
+            No notifications in your inbox.
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

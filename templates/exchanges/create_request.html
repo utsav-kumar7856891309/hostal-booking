@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Submit Room Exchange Request – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      
+      <div class="card card-custom p-4">
+        <h4 class="fw-bold text-navy mb-1"><i class="bi bi-arrow-left-right text-primary me-2"></i> Submit Hostel Room Exchange Request</h4>
+        <p class="text-muted small mb-4">Set your target room and hostel preferences. Our graph matching engine will automatically detect 2, 3, 4, or 5-party exchange cycles.</p>
+
+        <!-- Current Allotment Review -->
+        <div class="bg-light p-3 rounded mb-4 border">
+          <div class="row g-2 small">
+            <div class="col-sm-6">
+              <span class="text-muted">Your Current Bed:</span> <b>{{ student.current_bed.full_code }}</b>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted">Hostel:</span> <b>{{ student.current_hostel.name }} ({{ student.gender }})</b>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted">Room Category:</span> <b>{{ student.current_room.category.name }}</b>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted">Floor:</span> <b>Floor {{ student.current_room.floor }}</b>
+            </div>
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'create_exchange_request' %}">
+          {% csrf_token %}
+
+          <!-- Preferred Hostels -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-navy">
+              1. Preferred Hostels <span class="text-muted fw-normal">(Strictly same gender: {{ student.gender }})</span>
+            </label>
+            <div class="d-flex flex-wrap gap-3">
+              {% for h in hostels %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="preferred_hostels" value="{{ h.id }}" id="hostel_{{ h.id }}" checked>
+                  <label class="form-check-label small" for="hostel_{{ h.id }}">
+                    <b>{{ h.name }}</b> ({{ h.code }})
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+            <small class="text-muted">You may select multiple hostels of your gender to maximize matching opportunities.</small>
+          </div>
+
+          <!-- Preferred Room Categories -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-navy">
+              2. Acceptable Room Categories
+            </label>
+            <div class="row g-2">
+              {% for cat in categories %}
+                <div class="col-md-6">
+                  <div class="form-check border p-2 rounded bg-white">
+                    <input class="form-check-input ms-1" type="checkbox" name="preferred_categories" value="{{ cat.id }}" id="cat_{{ cat.id }}">
+                    <label class="form-check-label small ms-2" for="cat_{{ cat.id }}">
+                      <b>{{ cat.name }}</b>
+                      <div class="text-muted" style="font-size: 0.72rem;">{{ cat.capacity }} Bed(s) • {% if cat.is_ac %}AC{% else %}Non-AC{% endif %}</div>
+                    </label>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <small class="text-muted">Leave blank if open to any available room category.</small>
+          </div>
+
+          <!-- Preferred Floor -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy">3. Preferred Floor (Optional)</label>
+            <select name="preferred_floor" class="form-select">
+              <option value="">Any Floor (1, 2, 3, or 4)</option>
+              <option value="1">Floor 1</option>
+              <option value="2">Floor 2</option>
+              <option value="3">Floor 3</option>
+              <option value="4">Floor 4</option>
+            </select>
+          </div>
+
+          <!-- Reason -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-navy">4. Reason for Exchange</label>
+            <textarea name="reason" class="form-control" rows="3" placeholder="e.g. Proximity to technical labs, study group coordination, preferring AC / quiet floor, etc."></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary-custom px-4">
+              <i class="bi bi-send-check me-1"></i> Submit Exchange Request
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

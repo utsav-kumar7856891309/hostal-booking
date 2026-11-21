@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Direct 1-on-1 Bed Swap – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      
+      <div class="card card-custom p-4">
+        <h4 class="fw-bold text-navy mb-1"><i class="bi bi-person-lines-fill text-primary me-2"></i> Propose Direct 1-on-1 Bed Exchange</h4>
+        <p class="text-muted small mb-4">Directly select a fellow student of the same gender to initiate a pairwise bed swap. Both students will need to approve.</p>
+
+        <form method="post" action="{% url 'propose_direct_exchange' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy">Select Exchange Partner</label>
+            <select name="target_student_id" class="form-select" required size="8">
+              <option value="" disabled>-- Select a fellow student --</option>
+              {% for cand in candidates %}
+                <option value="{{ cand.id }}">
+                  {{ cand.full_name }} ({{ cand.student_id }}) — Current: {{ cand.current_bed.full_code }} [{{ cand.current_room.category.name }}] ({{ cand.current_hostel.name }})
+                </option>
+              {% empty %}
+                <option disabled>No candidate students available.</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted">Showing eligible students of same gender ({{ student.gender }}).</small>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-navy">Message / Mutual Agreement Remarks (Optional)</label>
+            <textarea name="remarks" class="form-control" rows="2" placeholder="e.g. Mutually agreed to swap beds for academic year 2026."></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary-custom px-4">
+              <i class="bi bi-check-circle me-1"></i> Send Exchange Proposal
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

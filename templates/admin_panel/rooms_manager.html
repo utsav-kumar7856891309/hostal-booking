@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Rooms & Beds Management – Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Rooms & Bed Inventory Management</h3>
+      <p class="text-muted small mb-0">Add rooms, configure capacities, and control individual bed availability statuses</p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+        <i class="bi bi-plus-circle me-1"></i> Add New Room
+      </button>
+      <a href="{% url 'admin_overview' %}" class="btn btn-outline-secondary btn-sm">
+        &larr; Back to Admin Hub
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="card card-custom p-3 mb-4">
+    <form method="get" action="{% url 'admin_rooms_manager' %}" class="row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label class="form-label small fw-bold">Filter Hostel</label>
+        <select name="hostel" class="form-select form-select-sm">
+          <option value="">All Hostels</option>
+          {% for h in hostels %}
+            <option value="{{ h.code }}" {% if selected_hostel == h.code %}selected{% endif %}>
+              {{ h.name }} ({{ h.code }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label small fw-bold">Filter Category</label>
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_cat == cat.id|stringformat:"s" %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+          <i class="bi bi-filter me-1"></i> Apply Filter
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Rooms & Beds Table -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-door-closed text-primary"></i> Campus Rooms & Bed Status Controller</h5>
+      <span class="badge bg-secondary">Showing {{ rooms|length }} of {{ total_rooms_found }} Rooms</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Hostel</th>
+              <th>Room No.</th>
+              <th>Floor</th>
+              <th>Category</th>
+              <th>Beds & Real-Time Status Controller</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for room in rooms %}
+              <tr>
+                <td class="fw-bold">{{ room.hostel.code }} <small class="text-muted">({{ room.hostel.gender }})</small></td>
+                <td class="fw-bold text-primary">{{ room.room_number }}</td>
+                <td>Floor {{ room.floor }}</td>
+                <td>{{ room.category.name }}</td>
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    {% for bed in room.beds.all %}
+                      <div class="border rounded p-1 px-2 bg-light d-flex align-items-center gap-2">
+                        <span class="fw-bold">{{ bed.bed_identifier }}:</span>
+                        <span class="badge {% if bed.status == 'VACANT' %}bg-success{% elif bed.status == 'OCCUPIED' %}bg-primary{% elif bed.status == 'BLOCKED' %}bg-warning text-dark{% else %}bg-danger{% endif %}" style="font-size:0.65rem;">
+                          {{ bed.status }}
+                        </span>
+                        
+                        <!-- Status Update Dropdown Form -->
+                        <form method="post" action="{% url 'admin_update_bed_status' bed.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <select name="status" class="form-select form-select-sm py-0" style="font-size: 0.7rem; width: 110px;" onchange="this.form.submit()">
+                            <option value="VACANT" {% if bed.status == 'VACANT' %}selected{% endif %}>Vacant</option>
+                            <option value="OCCUPIED" {% if bed.status == 'OCCUPIED' %}selected{% endif %}>Occupied</option>
+                            <option value="BLOCKED" {% if bed.status == 'BLOCKED' %}selected{% endif %}>Blocked</option>
+                            <option value="MAINTENANCE" {% if bed.status == 'MAINTENANCE' %}selected{% endif %}>Maintenance</option>
+                          </select>
+                        </form>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted p-4">No rooms match filter criteria.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Room Modal -->
+<div class="modal fade" id="addRoomModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'admin_add_room' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-navy">Add New Hostel Room</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Select Hostel</label>
+            <select name="hostel_id" class="form-select" required>
+              {% for h in hostels %}
+                <option value="{{ h.id }}">{{ h.name }} ({{ h.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Room Number</label>
+            <input type="text" name="room_number" class="form-control" placeholder="e.g. 501" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Floor</label>
+            <input type="number" name="floor" class="form-control" value="1" min="1" max="10" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Room Category & Bed Capacity</label>
+            <select name="category_id" class="form-select" required>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }} (Capacity: {{ cat.capacity }} beds)</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted">Bed identifiers (B1, B2, etc.) will be created automatically.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom btn-sm">Create Room</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

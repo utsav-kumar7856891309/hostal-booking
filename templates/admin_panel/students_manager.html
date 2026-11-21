@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Students Directory & Controls – Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Student Directory & Account Controls</h3>
+      <p class="text-muted small mb-0">Manage student accounts, fee statuses, disciplinary holds, and room de-allocations</p>
+    </div>
+    <a href="{% url 'admin_overview' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to Admin Hub</a>
+  </div>
+
+  <!-- Search Card -->
+  <div class="card card-custom p-3 mb-4">
+    <form method="get" action="{% url 'admin_students_manager' %}" class="row g-2">
+      <div class="col-md-10">
+        <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm" placeholder="Search by student name, student ID, or registration number...">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+          <i class="bi bi-search me-1"></i> Search
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Students Table -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-people-fill text-primary"></i> Students Roster</h5>
+      <span class="badge bg-secondary">Total: {{ total_count }} Students</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>ID & Name</th>
+              <th>Gender</th>
+              <th>Course & Year</th>
+              <th>Current Allotment</th>
+              <th>Fee Status</th>
+              <th>Disciplinary Status</th>
+              <th>Account Status</th>
+              <th class="text-end">Controls</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+              <tr>
+                <td>
+                  <div class="fw-bold">{{ s.full_name }}</div>
+                  <div class="text-muted" style="font-size:0.7rem;">ID: {{ s.student_id }} • Reg: {{ s.registration_number }}</div>
+                </td>
+                <td>{{ s.gender }}</td>
+                <td>{{ s.course }} ({{ s.academic_year }})</td>
+                <td>
+                  {% if s.current_bed %}
+                    <span class="badge bg-primary">{{ s.current_bed.full_code }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Unallocated</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <!-- Fee Status Form -->
+                  <form method="post" action="{% url 'admin_update_student_status' s.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="fee_status">
+                    <select name="value" class="form-select form-select-sm py-0" style="font-size:0.7rem; width: 85px;" onchange="this.form.submit()">
+                      <option value="PAID" {% if s.fee_status == 'PAID' %}selected{% endif %}>Paid</option>
+                      <option value="PARTIAL" {% if s.fee_status == 'PARTIAL' %}selected{% endif %}>Partial</option>
+                      <option value="UNPAID" {% if s.fee_status == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+                    </select>
+                  </form>
+                </td>
+                <td>
+                  <!-- Disciplinary Status Form -->
+                  <form method="post" action="{% url 'admin_update_student_status' s.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="disciplinary_status">
+                    <select name="value" class="form-select form-select-sm py-0" style="font-size:0.7rem; width: 95px;" onchange="this.form.submit()">
+                      <option value="CLEAN" {% if s.disciplinary_status == 'CLEAN' %}selected{% endif %}>Clean</option>
+                      <option value="WARNING" {% if s.disciplinary_status == 'WARNING' %}selected{% endif %}>Warning</option>
+                      <option value="HOLD" {% if s.disciplinary_status == 'HOLD' %}selected{% endif %}>Hold</option>
+                    </select>
+                  </form>
+                </td>
+                <td>
+                  <!-- Account Status Form -->
+                  <form method="post" action="{% url 'admin_update_student_status' s.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="account_status">
+                    <select name="value" class="form-select form-select-sm py-0" style="font-size:0.7rem; width: 95px;" onchange="this.form.submit()">
+                      <option value="ACTIVE" {% if s.account_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                      <option value="SUSPENDED" {% if s.account_status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+                    </select>
+                  </form>
+                </td>
+                <td class="text-end">
+                  {% if s.current_bed %}
+                    <form method="post" action="{% url 'admin_update_student_status' s.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to de-allocate this student bed?');">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="deallocate_bed">
+                      <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.7rem;">
+                        De-allocate
+                      </button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted p-4">No students found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

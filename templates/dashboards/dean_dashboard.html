@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Dean Analytics & Executive Reports – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Dean of Student Welfare – Executive Analytics</h3>
+      <p class="text-muted small mb-0">Hostel occupancy, cyclic exchange distributions, student satisfaction & operations overview</p>
+    </div>
+    <span class="badge bg-success p-2">Read-Only Analytics</span>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="row g-4 mb-4">
+    <!-- Occupancy Bar Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card card-custom p-3 h-100">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-bar-chart-fill text-primary me-2"></i> Hostel Bed Occupancy Rates</h6>
+        <div style="height: 280px;">
+          <canvas id="occupancyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cycle Distribution Doughnut -->
+    <div class="col-12 col-lg-6">
+      <div class="card card-custom p-3 h-100">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-pie-chart-fill text-info me-2"></i> Cyclic Exchange Distribution (2-5 Students)</h6>
+        <div style="height: 280px;">
+          <canvas id="cycleChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="row g-4 mb-4">
+    <!-- Maintenance by Category -->
+    <div class="col-12 col-lg-6">
+      <div class="card card-custom p-3 h-100">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-tools text-warning me-2"></i> Maintenance Complaints Breakdown</h6>
+        <div style="height: 280px;">
+          <canvas id="maintenanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mess Satisfaction Ratings -->
+    <div class="col-12 col-lg-6">
+      <div class="card card-custom p-3 h-100">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-star-fill text-warning me-2"></i> Mess Quality Feedback Ratings (1 to 5 Stars)</h6>
+        <div style="height: 280px;">
+          <canvas id="messChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Financial & Transfer Summary -->
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card card-custom p-3 text-center">
+        <div class="text-muted small">Total Transfers Executed</div>
+        <div class="stat-val text-primary">{{ total_processed_transfers }}</div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card card-custom p-3 text-center">
+        <div class="text-muted small">Total Administrative Fees Collected (Simulated)</div>
+        <div class="stat-val text-success">₹{{ total_processing_fee_collected|floatformat:2 }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js Configuration -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // 1. Occupancy Chart
+  new Chart(document.getElementById('occupancyChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ hostel_labels|safe }},
+      datasets: [
+        {
+          label: 'Occupied Beds',
+          data: {{ hostel_occupied|safe }},
+          backgroundColor: '#1e3a8a'
+        },
+        {
+          label: 'Vacant Beds',
+          data: {{ hostel_vacant|safe }},
+          backgroundColor: '#10b981'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
+    }
+  });
+
+  // 2. Cycle Chart
+  new Chart(document.getElementById('cycleChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ cycle_labels|safe }},
+      datasets: [{
+        data: {{ cycle_counts|safe }},
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+  // 3. Maintenance Chart
+  new Chart(document.getElementById('maintenanceChart'), {
+    type: 'polarArea',
+    data: {
+      labels: {{ maint_labels|safe }},
+      datasets: [{
+        data: {{ maint_counts|safe }},
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#6366f1', '#ec4899', '#64748b']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+  // 4. Mess Chart
+  new Chart(document.getElementById('messChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ rating_labels|safe }},
+      datasets: [{
+        label: 'Ratings Count',
+        data: {{ rating_counts|safe }},
+        backgroundColor: '#f59e0b'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+});
+</script>
+{% endblock %}

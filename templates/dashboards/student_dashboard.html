@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <!-- Profile & Allocation Header Banner -->
+  <div class="card card-custom p-4 mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%); color: #ffffff;">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-white text-primary fw-bold d-flex align-items-center justify-content-center shadow" style="width: 65px; height: 65px; font-size: 1.75rem;">
+            {{ student.full_name|make_list|first|upper }}
+          </div>
+          <div>
+            <h3 class="fw-bold mb-1">{{ student.full_name }}</h3>
+            <p class="mb-0 text-white-50 small">
+              {{ student.course }} • {{ student.academic_year }} • ID: <span class="text-white fw-bold">{{ student.student_id }}</span> • Reg: {{ student.registration_number }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'create_exchange_request' %}" class="btn btn-light text-primary fw-semibold btn-sm px-3 me-2 shadow-sm">
+          <i class="bi bi-arrow-left-right me-1"></i> Request Exchange
+        </a>
+        <a href="{% url 'propose_direct_exchange' %}" class="btn btn-outline-light btn-sm px-3 shadow-sm">
+          <i class="bi bi-person-lines-fill me-1"></i> Direct Swap
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Allocation Stat Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-lbl">Current Hostel & Bed</div>
+            <div class="stat-val text-primary">{{ student.current_bed.full_code|default:'Not Allotted' }}</div>
+            <small class="text-muted">{{ student.current_hostel.name|default:'No Hostel' }}</small>
+          </div>
+          <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-door-closed-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-lbl">Room Category</div>
+            <div class="stat-val text-info" style="font-size: 1.25rem;">
+              {{ student.current_room.category.name|default:'N/A' }}
+            </div>
+            <small class="text-muted">Floor {{ student.current_room.floor|default:'-' }} • Room {{ student.current_room.room_number|default:'-' }}</small>
+          </div>
+          <div class="stat-icon-wrapper bg-info bg-opacity-10 text-info">
+            <i class="bi bi-snow"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-lbl">Annual Room Fee</div>
+            <div class="stat-val text-success">
+              {% if annual_fee %}₹{{ annual_fee|floatformat:0 }}{% else %}₹0{% endif %}
+            </div>
+            <span class="badge {% if student.fee_status == 'PAID' %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 0.68rem;">
+              {{ student.get_fee_status_display }}
+            </span>
+          </div>
+          <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success">
+            <i class="bi bi-receipt"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-lbl">Advance Balance</div>
+            <div class="stat-val text-warning">₹{{ account.balance|floatformat:0 }}</div>
+            <small class="text-muted"><a href="{% url 'my_financial_account' %}" class="text-decoration-none">View Ledger &rarr;</a></small>
+          </div>
+          <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-wallet2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Eligibility Status Alert -->
+  {% if not is_eligible %}
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+      <div>
+        <strong>Exchange Eligibility Notice:</strong> {{ eligibility_msg }}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Active Proposals Section -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-arrow-repeat text-primary"></i> Exchange Proposals (Action Required)</h5>
+      <span class="badge bg-primary">{{ participations.count }} Involved</span>
+    </div>
+    <div class="card-body p-0">
+      {% if participations %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Proposal Code</th>
+                <th>Cycle Type</th>
+                <th>Move Details</th>
+                <th>Your Status</th>
+                <th>Proposal Status</th>
+                <th>Expires</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for part in participations %}
+                <tr>
+                  <td class="fw-bold">{{ part.proposal.proposal_code }}</td>
+                  <td>
+                    <span class="badge bg-secondary">{{ part.proposal.cycle_length }}-Party Cycle</span>
+                  </td>
+                  <td>
+                    <span class="text-danger fw-semibold">{{ part.from_bed.full_code }}</span>
+                    <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                    <span class="text-success fw-bold">{{ part.to_bed.full_code }}</span>
+                    <div class="small text-muted">{{ part.to_bed.room.category.name }}</div>
+                  </td>
+                  <td>
+                    {% if part.status == 'ACCEPTED' %}
+                      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Accepted</span>
+                    {% elif part.status == 'DECLINED' %}
+                      <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Declined</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Pending Decision</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge bg-info text-dark">{{ part.proposal.get_status_display }}</span>
+                  </td>
+                  <td class="small text-muted">
+                    {{ part.proposal.expires_at|timeuntil }} left
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'proposal_detail' part.proposal.id %}" class="btn btn-outline-primary btn-sm">
+                      Review & Respond <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-muted">
+          <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+          No active exchange proposals right now. <a href="{% url 'create_exchange_request' %}">Submit a request</a> or explore the <a href="{% url 'room_search' %}">Bed Explorer</a> to find partners!
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Active Requests & History Column -->
+    <div class="col-12 col-lg-8">
+      
+      <!-- My Active Requests -->
+      <div class="card card-custom mb-4">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-list-task text-primary"></i> My Exchange Requests</h5>
+          <a href="{% url 'create_exchange_request' %}" class="btn btn-sm btn-outline-primary">+ New Request</a>
+        </div>
+        <div class="card-body p-0">
+          {% if active_requests %}
+            <ul class="list-group list-group-flush">
+              {% for req in active_requests %}
+                <li class="list-group-item p-3">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <span class="badge bg-primary mb-1">Request #{{ req.id }}</span>
+                      <div class="fw-semibold">From Bed: {{ req.current_bed.full_code }}</div>
+                      <div class="small text-muted">
+                        Preferred Hostels: 
+                        {% for h in req.preferred_hostels.all %}{{ h.code }}{% if not forloop.last %}, {% endif %}{% empty %}Any eligible{% endfor %}
+                        • Preferred Categories: 
+                        {% for c in req.preferred_categories.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}Any category{% endfor %}
+                      </div>
+                      {% if req.reason %}<div class="small text-secondary mt-1">"{{ req.reason }}"</div>{% endif %}
+                    </div>
+                    <span class="badge bg-info text-dark">{{ req.get_status_display }}</span>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="p-3 text-center text-muted small">No active open exchange requests.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Historical Transfer Records & Downloadable PDF Letters -->
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-file-earmark-pdf text-danger"></i> Official Transfer Letters & History</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if transfer_records %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                  <tr>
+                    <th>Transfer ID</th>
+                    <th>Previous Room</th>
+                    <th>New Room</th>
+                    <th>Transfer Date</th>
+                    <th class="text-end">Official Order</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tr in transfer_records %}
+                    <tr>
+                      <td class="fw-bold text-primary">{{ tr.transfer_id }}</td>
+                      <td>{{ tr.previous_bed.full_code }} ({{ tr.previous_category.name }})</td>
+                      <td class="text-success fw-bold">{{ tr.new_bed.full_code }} ({{ tr.new_category.name }})</td>
+                      <td class="text-muted">{{ tr.transfer_date|date:"M d, Y" }}</td>
+                      <td class="text-end">
+                        <a href="{% url 'view_transfer_letter_html' tr.id %}" class="btn btn-outline-secondary btn-sm py-0 px-2">View</a>
+                        <a href="{% url 'download_transfer_letter_pdf' tr.id %}" class="btn btn-outline-danger btn-sm py-0 px-2">
+                          <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="p-3 text-center text-muted small">No past room transfers recorded.</div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Sidebar Services & Announcements -->
+    <div class="col-12 col-lg-4">
+      
+      <!-- Announcements -->
+      <div class="card card-custom mb-4">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-megaphone-fill text-warning"></i> Campus Notices</h5>
+        </div>
+        <div class="card-body p-3">
+          {% for ann in announcements %}
+            <div class="mb-3 border-bottom pb-2">
+              <span class="badge {% if ann.priority == 'URGENT' %}bg-danger{% elif ann.priority == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %} mb-1" style="font-size: 0.65rem;">
+                {{ ann.get_priority_display }}
+              </span>
+              <div class="fw-bold small">{{ ann.title }}</div>
+              <div class="text-muted small" style="font-size: 0.78rem;">{{ ann.content|truncatechars:90 }}</div>
+              <div class="text-secondary small mt-1" style="font-size: 0.68rem;">{{ ann.created_at|date:"M d" }}</div>
+            </div>
+          {% empty %}
+            <div class="text-muted small text-center">No notices at this time.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Today's Mess Menu Card -->
+      <div class="card card-custom mb-4">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-egg-fried text-success"></i> Today's Mess ({{ today_day }})</h5>
+          <a href="{% url 'mess_index' %}" class="small text-decoration-none">Full Menu</a>
+        </div>
+        <div class="card-body p-3">
+          {% for m in today_menus %}
+            <div class="mb-2">
+              <span class="badge bg-light text-dark fw-bold border">{{ m.get_meal_type_display }} ({{ m.timings }})</span>
+              <div class="small text-secondary mt-1">{{ m.items }}</div>
+            </div>
+          {% empty %}
+            <div class="text-muted small">No menu recorded for today.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Recent Service Tickets -->
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-tools text-info"></i> Maintenance & Laundry</h5>
+        </div>
+        <div class="card-body p-3">
+          <h6 class="small fw-bold text-muted mb-2">Maintenance Tickets</h6>
+          {% for mnt in recent_maintenance %}
+            <div class="d-flex justify-content-between align-items-center mb-1 small">
+              <span>{{ mnt.title|truncatechars:25 }}</span>
+              <span class="badge {% if mnt.status == 'RESOLVED' %}bg-success{% else %}bg-warning text-dark{% endif %}" style="font-size: 0.65rem;">{{ mnt.status }}</span>
+            </div>
+          {% empty %}
+            <div class="text-muted small mb-2">No active complaints.</div>
+          {% endfor %}
+
+          <h6 class="small fw-bold text-muted mt-3 mb-2">Laundry Pickups</h6>
+          {% for lnd in recent_laundry %}
+            <div class="d-flex justify-content-between align-items-center mb-1 small">
+              <span>{{ lnd.booking_id }}</span>
+              <span class="badge bg-info text-dark" style="font-size: 0.65rem;">{{ lnd.status }}</span>
+            </div>
+          {% empty %}
+            <div class="text-muted small">No recent laundry orders.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block title %}Proposal {{ proposal.proposal_code }} – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Proposal Header -->
+  <div class="card card-custom p-4 mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h3 class="fw-bold text-navy mb-0">{{ proposal.proposal_code }}</h3>
+          <span class="badge bg-primary px-3 py-2">{{ proposal.cycle_length }}-Party Cyclic Exchange</span>
+        </div>
+        <p class="text-muted small mb-0">
+          Created {{ proposal.created_at|date:"M d, Y H:i" }} • Deadline: <span class="fw-bold text-danger">{{ proposal.expires_at|date:"M d, Y H:i" }}</span> ({{ proposal.expires_at|timeuntil }} remaining)
+        </p>
+      </div>
+
+      <div>
+        <span class="badge {% if proposal.status == 'COMPLETED' %}bg-success{% elif proposal.status == 'REJECTED' %}bg-danger{% elif proposal.status == 'PAYMENT_PENDING' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} p-2" style="font-size: 0.95rem;">
+          {{ proposal.get_status_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejection banner if rejected -->
+  {% if proposal.status == 'REJECTED' %}
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-x-octagon-fill fs-4"></i>
+      <div>
+        <strong>Proposal Rejected:</strong> {{ proposal.rejection_reason }}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Cyclic Flow Sequence Visualizer -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-diagram-3-fill text-primary"></i> Exchange Cycle Rotation Sequence</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 align-items-center justify-content-center">
+        {% for pf in participant_financials %}
+          <div class="col-12 col-md">
+            <div class="cycle-step-card {% if my_participant and my_participant.id == pf.participant.id %}border-primary shadow-sm{% endif %}">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-secondary">Participant {{ forloop.counter }}</span>
+                {% if pf.participant.status == 'ACCEPTED' %}
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> Accepted</span>
+                {% elif pf.participant.status == 'DECLINED' %}
+                  <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Declined</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span>
+                {% endif %}
+              </div>
+              <h6 class="fw-bold text-navy mb-1">{{ pf.participant.student.full_name }}</h6>
+              <div class="small text-muted mb-2">{{ pf.participant.student.student_id }} • {{ pf.participant.student.course|truncatechars:20 }}</div>
+
+              <div class="p-2 rounded bg-light border small">
+                <div class="text-danger fw-semibold"><i class="bi bi-box-arrow-up-right me-1"></i> Moves from: {{ pf.participant.from_bed.full_code }}</div>
+                <div class="text-success fw-bold"><i class="bi bi-box-arrow-in-down-right me-1"></i> Moves to: {{ pf.participant.to_bed.full_code }}</div>
+                <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ pf.participant.to_bed.room.category.name }}</div>
+              </div>
+            </div>
+          </div>
+          {% if not forloop.last %}
+            <div class="col-auto d-none d-md-block text-center cycle-step-arrow">
+              <i class="bi bi-arrow-right-circle-fill"></i>
+            </div>
+          {% else %}
+            <!-- Cycle loop back indicator -->
+            <div class="col-auto d-none d-md-block text-center cycle-step-arrow text-success" title="Rotates back to Participant 1">
+              <i class="bi bi-arrow-repeat"></i>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Participant Action Card (If logged in user is a student participant) -->
+  {% if my_participant and proposal.status == 'PROPOSED' %}
+    <div class="card card-custom p-4 mb-4 border-primary bg-primary bg-opacity-10">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h5 class="fw-bold text-navy mb-1">Your Decision is Required</h5>
+          <p class="text-muted small mb-0">
+            Current Status: <b>{{ my_participant.get_status_display }}</b>. Accept to proceed to warden authorization, or decline to cancel this exchange.
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          {% if my_participant.status != 'ACCEPTED' %}
+            <form method="post" action="{% url 'accept_proposal' proposal.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success px-4 fw-semibold">
+                <i class="bi bi-check-lg me-1"></i> Accept Exchange
+              </button>
+            </form>
+          {% endif %}
+          <form method="post" action="{% url 'decline_proposal' proposal.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger px-3">
+              <i class="bi bi-x-lg me-1"></i> Decline
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Financial Settlement Breakdown Table -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-cash-coin text-success"></i> Financial Settlement Breakdown</h5>
+      {% if proposal.status in 'APPROVED_BY_WARDENS PAYMENT_PENDING' %}
+        <a href="{% url 'financial_settle' proposal.id %}" class="btn btn-sm btn-success">
+          <i class="bi bi-wallet2 me-1"></i> Open Payment / Settlement
+        </a>
+      {% endif %}
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Student</th>
+              <th>Previous Room Annual Fee</th>
+              <th>New Room Annual Fee</th>
+              <th>Fee Difference</th>
+              <th>Processing Fee</th>
+              <th>Advance Credit Generated</th>
+              <th>Net Amount Payable</th>
+              <th>Settlement Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pf in participant_financials %}
+              <tr>
+                <td class="fw-bold">{{ pf.participant.student.full_name }} ({{ pf.participant.student.student_id }})</td>
+                <td>₹{{ pf.fin.old_fee|floatformat:0 }}</td>
+                <td>₹{{ pf.fin.new_fee|floatformat:0 }}</td>
+                <td>
+                  {% if pf.fin.raw_difference > 0 %}
+                    <span class="text-danger fw-bold">+₹{{ pf.fin.fee_difference_payable|floatformat:0 }}</span>
+                  {% elif pf.fin.raw_difference < 0 %}
+                    <span class="text-success fw-bold">-₹{{ pf.fin.advance_credit_generated|floatformat:0 }} (Credit)</span>
+                  {% else %}
+                    <span class="text-muted">₹0</span>
+                  {% endif %}
+                </td>
+                <td>₹{{ pf.fin.processing_fee|floatformat:0 }}</td>
+                <td class="text-success fw-bold">₹{{ pf.fin.advance_credit_generated|floatformat:0 }}</td>
+                <td class="fw-bold text-primary">₹{{ pf.fin.net_payable|floatformat:0 }}</td>
+                <td>
+                  {% if pf.fin.is_settled %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Settled</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending Payment</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warden Approvals Status -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-shield-check text-info"></i> Hostel Warden Approvals</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Hostel</th>
+              <th>Assigned Warden</th>
+              <th>Decision Status</th>
+              <th>Decided At</th>
+              <th>Remarks</th>
+              {% if user.is_warden or user.is_chief_warden %}
+                <th class="text-end">Action</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for wa in warden_approvals %}
+              <tr>
+                <td class="fw-bold">{{ wa.hostel.name }} ({{ wa.hostel.code }})</td>
+                <td>{{ wa.warden|default:'Any Hostel Warden' }}</td>
+                <td>
+                  <span class="badge {% if wa.status == 'APPROVED' %}bg-success{% elif wa.status == 'REJECTED' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                    {{ wa.get_status_display }}
+                  </span>
+                </td>
+                <td class="text-muted">{{ wa.decided_at|date:"M d, Y H:i"|default:'Pending' }}</td>
+                <td>{{ wa.remarks|default:'None' }}</td>
+                {% if user.is_warden or user.is_chief_warden %}
+                  <td class="text-end">
+                    <a href="{% url 'approval_detail' proposal.id %}" class="btn btn-outline-primary btn-sm py-0 px-2">Decide</a>
+                  </td>
+                {% endif %}
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center text-muted p-3">Approvals will be generated once all students accept.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Execution Action for Staff -->
+  {% if can_execute and is_financially_ready %}
+    <div class="card card-custom p-4 bg-success bg-opacity-10 border-success">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h5 class="fw-bold text-success mb-1"><i class="bi bi-check-all me-1"></i> Ready for Atomic Execution</h5>
+          <p class="text-muted small mb-0">All student acceptances, warden approvals, and financial settlements are verified. Click to execute the room exchange atomically in SQLite.</p>
+        </div>
+        <form method="post" action="{% url 'execute_proposal_now' proposal.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success px-4 py-2 fw-bold shadow-sm">
+            <i class="bi bi-lightning-charge-fill me-1"></i> Execute Room Transfer Now
+          </button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

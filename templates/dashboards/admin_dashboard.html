@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}Admin Control Panel – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">University Administrator Control Panel</h3>
+      <p class="text-muted small mb-0">Hostels inventory, pricing, exchange policies & system configuration</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'find_matches' %}" class="btn btn-primary-custom btn-sm">
+        <i class="bi bi-cpu me-1"></i> Graph Matching Engine
+      </a>
+      <a href="/admin/" target="_blank" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-database me-1"></i> Django Admin
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Students</div>
+        <div class="stat-val text-primary">{{ total_students }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Hostels</div>
+        <div class="stat-val text-navy">{{ total_hostels }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Rooms</div>
+        <div class="stat-val text-info">{{ total_rooms }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Total Beds</div>
+        <div class="stat-val text-dark">{{ total_beds }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Occupied Beds</div>
+        <div class="stat-val text-success">{{ occupied_beds }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Transfers Executed</div>
+        <div class="stat-val text-warning">{{ total_completed_exchanges }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Policy Rules Configuration Form -->
+    <div class="col-12 col-lg-5">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-sliders text-primary"></i> Exchange Policy Configuration</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'admin_dashboard' %}">
+            {% csrf_token %}
+            <input type="hidden" name="update_policy" value="1">
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Max Cycle Length (2 to 5 Students)</label>
+              <input type="number" name="max_cycle_length" class="form-control" min="2" max="5" value="{{ policy.max_cycle_length }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Exchange Administrative Processing Fee (₹)</label>
+              <input type="number" name="processing_fee" class="form-control" step="10.00" value="{{ policy.processing_fee }}" required>
+              <small class="text-muted">Charged individually to all participating students upon transfer.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Proposal Auto-Expiry Time (Hours)</label>
+              <input type="number" name="proposal_expiry_hours" class="form-control" value="{{ policy.proposal_expiry_hours }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Cooling-Off Period (Days)</label>
+              <input type="number" name="cooling_off_days" class="form-control" value="{{ policy.cooling_off_days }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Max Exchanges Allowed Per Academic Year</label>
+              <input type="number" name="max_exchanges_per_year" class="form-control" value="{{ policy.max_exchanges_per_year }}" required>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" name="allow_cross_hostel" id="chkCrossHostel" {% if policy.allow_cross_hostel %}checked{% endif %}>
+              <label class="form-check-label small" for="chkCrossHostel">Allow Cross-Hostel Exchanges (Same Gender)</label>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" name="allow_cross_category" id="chkCrossCat" {% if policy.allow_cross_category %}checked{% endif %}>
+              <label class="form-check-label small" for="chkCrossCat">Allow Exchanges Across Different Room Categories</label>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" name="allow_cross_academic_year" id="chkCrossYear" {% if policy.allow_cross_academic_year %}checked{% endif %}>
+              <label class="form-check-label small" for="chkCrossYear">Allow Exchanges Across Academic Years</label>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="allow_cross_course" id="chkCrossCourse" {% if policy.allow_cross_course %}checked{% endif %}>
+              <label class="form-check-label small" for="chkCrossCourse">Allow Exchanges Across Degree Courses</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100">
+              <i class="bi bi-save me-1"></i> Save Policy Settings
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Categories & Annual Pricing Table -->
+    <div class="col-12 col-lg-7">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <h5 class="card-title-custom"><i class="bi bi-currency-rupee text-success"></i> Annual Room Pricing Schedule</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th>Hostel</th>
+                  <th>Category</th>
+                  <th>AC</th>
+                  <th>Capacity</th>
+                  <th class="text-end">Annual Fee</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in pricings %}
+                  <tr>
+                    <td class="fw-bold">{{ p.hostel.code }}</td>
+                    <td>{{ p.category.name }}</td>
+                    <td>
+                      {% if p.category.is_ac %}
+                        <span class="badge bg-info text-dark">AC</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Non-AC</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ p.category.capacity }} Beds</td>
+                    <td class="text-end fw-bold text-success">₹{{ p.annual_fee|floatformat:0 }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

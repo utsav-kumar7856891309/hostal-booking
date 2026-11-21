@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Chief Warden Console – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Chief Warden Central Console</h3>
+      <p class="text-muted small mb-0">University-wide hostel oversight, exchange monitoring & approval escalations</p>
+    </div>
+    <a href="{% url 'find_matches' %}" class="btn btn-primary-custom btn-sm">
+      <i class="bi bi-cpu me-1"></i> Open Graph Matching Engine
+    </a>
+  </div>
+
+  <!-- 4 Hostels Multi-Hostel Overview Cards -->
+  <div class="row g-3 mb-4">
+    {% for h in hostels %}
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card card-custom p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <span class="badge bg-secondary mb-1">{{ h.code }}</span>
+              <h6 class="fw-bold text-navy mb-0">{{ h.name }}</h6>
+              <small class="text-muted">{{ h.gender }} Hostel</small>
+            </div>
+            <a href="{% url 'warden_dashboard' %}?hostel={{ h.code }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+              View
+            </a>
+          </div>
+          <div class="mt-2">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Occupancy</span>
+              <span class="fw-bold text-navy">{{ h.occupied_beds_cnt }}/{{ h.total_beds_cnt }} beds</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio h.occupied_beds_cnt h.total_beds_cnt 100 %}%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Active Proposals Across the University -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-diagram-3-fill text-primary"></i> Active Room Exchange Proposals Across Campus</h5>
+      <span class="badge bg-info text-dark">{{ all_active_proposals.count }} Active</span>
+    </div>
+    <div class="card-body p-0">
+      {% if all_active_proposals %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small">
+              <tr>
+                <th>Code</th>
+                <th>Cycle Type</th>
+                <th>Participating Students</th>
+                <th>Warden Approvals</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th class="text-end">Oversight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prop in all_active_proposals %}
+                <tr>
+                  <td class="fw-bold text-primary">{{ prop.proposal_code }}</td>
+                  <td><span class="badge bg-secondary">{{ prop.cycle_length }}-Party Cycle</span></td>
+                  <td>
+                    <div class="small">
+                      {% for p in prop.participants.all %}
+                        {{ p.student.full_name }} ({{ p.from_bed.full_code }} &rarr; {{ p.to_bed.full_code }}){% if not forloop.last %}<br/>{% endif %}
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td>
+                    {% for wa in prop.warden_approvals.all %}
+                      <span class="badge {% if wa.status == 'APPROVED' %}bg-success{% elif wa.status == 'REJECTED' %}bg-danger{% else %}bg-warning text-dark{% endif %}" style="font-size: 0.65rem;">
+                        {{ wa.hostel.code }}: {{ wa.status }}
+                      </span>
+                    {% empty %}
+                      <span class="text-muted small">None required yet</span>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    <span class="badge bg-info text-dark">{{ prop.get_status_display }}</span>
+                  </td>
+                  <td class="small text-muted">{{ prop.expires_at|timeuntil }}</td>
+                  <td class="text-end">
+                    <a href="{% url 'proposal_detail' prop.id %}" class="btn btn-outline-primary btn-sm">
+                      Inspect
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-muted">No active proposals in progress right now.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Historical Completed Transfers -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-clock-history text-success"></i> Recently Executed Transfers</h5>
+      <span class="badge bg-success">{{ completed_proposals }} Completed Total</span>
+    </div>
+    <div class="card-body p-0">
+      {% if recent_completed_proposals %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>Proposal</th>
+                <th>Completed At</th>
+                <th>Cycle Size</th>
+                <th>Participants</th>
+                <th class="text-end">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in recent_completed_proposals %}
+                <tr>
+                  <td class="fw-bold text-success">{{ p.proposal_code }}</td>
+                  <td>{{ p.completed_at|date:"M d, Y H:i" }}</td>
+                  <td>{{ p.cycle_length }}-Student Cycle</td>
+                  <td>
+                    {% for part in p.participants.all %}
+                      {{ part.student.full_name }} ({{ part.to_bed.full_code }}){% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'proposal_detail' p.id %}" class="btn btn-outline-secondary btn-sm py-0 px-2">View</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-3 text-center text-muted small">No completed transfers on record yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

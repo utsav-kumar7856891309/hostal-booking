@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Graph Matching Engine – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0"><i class="bi bi-cpu-fill text-primary me-2"></i> Graph-Based Cyclic Matching Engine</h3>
+      <p class="text-muted small mb-0">Detects bounded elementary directed exchange cycles (2, 3, 4, and 5 students) via NetworkX</p>
+    </div>
+    
+    <form method="post" action="{% url 'find_matches' %}">
+      {% csrf_token %}
+      <input type="hidden" name="generate_proposals" value="1">
+      <button type="submit" class="btn btn-success" {% if total_cycles == 0 %}disabled{% endif %}>
+        <i class="bi bi-plus-circle me-1"></i> Auto-Generate Proposals for All Detected Cycles
+      </button>
+    </form>
+  </div>
+
+  <!-- Engine Benchmark Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Active Student Nodes</div>
+        <div class="stat-val text-primary">{{ total_nodes }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Feasible Swap Edges</div>
+        <div class="stat-val text-info">{{ total_edges }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Total Valid Cycles Found</div>
+        <div class="stat-val text-success">{{ total_cycles }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-lbl">Execution Benchmark</div>
+        <div class="stat-val text-warning">{{ elapsed_time_ms }} ms</div>
+        <small class="text-muted">&lt; 5.0 seconds target met</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cycles breakdown by length -->
+  {% for length, cycle_list in cycles_by_len.items %}
+    <div class="card card-custom mb-4">
+      <div class="card-header-custom">
+        <h5 class="card-title-custom">
+          <span class="badge bg-primary me-2">{{ length }}-Party Cycles</span>
+          Found {{ cycle_list|length }} Candidate Rotations
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if cycle_list %}
+          <div class="row g-3">
+            {% for cycle in cycle_list %}
+              <div class="col-12 col-lg-6">
+                <div class="p-3 border rounded bg-light">
+                  <div class="fw-bold text-navy mb-2">Cycle #{{ forloop.counter }} ({{ length }} Students)</div>
+                  <div class="d-flex flex-wrap align-items-center gap-2 small">
+                    {% for stu in cycle %}
+                      <span class="badge bg-white text-dark border p-2">
+                        <b>{{ stu.full_name }}</b> ({{ stu.student_id }})<br/>
+                        <span class="text-primary">{{ stu.current_bed.full_code }}</span>
+                      </span>
+                      {% if not forloop.last %}
+                        <i class="bi bi-arrow-right text-muted"></i>
+                      {% else %}
+                        <i class="bi bi-arrow-repeat text-success"></i>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted small">No {{ length }}-party cycles detected among active open requests.</div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Bed Explorer & Search – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Campus Bed Explorer & Search</h3>
+      <p class="text-muted small mb-0">Browse rooms and beds across university hostels to find eligible exchange options</p>
+    </div>
+    {% if student %}
+      <a href="{% url 'propose_direct_exchange' %}" class="btn btn-primary-custom btn-sm">
+        <i class="bi bi-arrow-left-right me-1"></i> Propose Direct Swap
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="card card-custom p-3 mb-4">
+    <form method="get" action="{% url 'room_search' %}" class="row g-3 align-items-end">
+      
+      <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Hostel</label>
+        <select name="hostel" class="form-select form-select-sm">
+          <option value="">All Hostels</option>
+          {% for h in hostels %}
+            <option value="{{ h.code }}" {% if selected_hostel == h.code %}selected{% endif %}>
+              {{ h.name }} ({{ h.gender }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Room Category</label>
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_cat == cat.id|stringformat:"s" %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold">AC / Non-AC</label>
+        <select name="is_ac" class="form-select form-select-sm">
+          <option value="">Any</option>
+          <option value="1" {% if selected_ac == '1' %}selected{% endif %}>AC Only</option>
+          <option value="0" {% if selected_ac == '0' %}selected{% endif %}>Non-AC Only</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold">Status</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          <option value="OCCUPIED" {% if selected_status == 'OCCUPIED' %}selected{% endif %}>Occupied (Swap Targets)</option>
+          <option value="VACANT" {% if selected_status == 'VACANT' %}selected{% endif %}>Vacant Beds</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+          <i class="bi bi-filter me-1"></i> Filter Beds
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Count -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted small">Showing {{ beds|length }} of {{ beds_count }} matching beds across campus</span>
+  </div>
+
+  <!-- Bed Results Grid -->
+  <div class="row g-3">
+    {% for bed in beds %}
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card card-custom p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge {% if bed.status == 'OCCUPIED' %}bg-primary{% elif bed.status == 'VACANT' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ bed.get_status_display }}
+            </span>
+            <span class="badge bg-light text-dark border">{{ bed.room.hostel.code }}</span>
+          </div>
+
+          <h5 class="fw-bold text-navy mb-1">{{ bed.full_code }}</h5>
+          <div class="small text-muted mb-2">{{ bed.room.hostel.name }}</div>
+
+          <div class="p-2 rounded bg-light border small mb-3">
+            <div><b>Category:</b> {{ bed.room.category.name }}</div>
+            <div><b>Floor:</b> Floor {{ bed.room.floor }} • <b>Room:</b> {{ bed.room.room_number }}</div>
+            <div><b>Features:</b> {% if bed.room.category.is_ac %}AC Enabled{% else %}Non-AC{% endif %} ({{ bed.room.category.capacity }} Beds)</div>
+          </div>
+
+          {% if student and bed.status == 'OCCUPIED' and bed.id != student.current_bed_id %}
+            <a href="{% url 'propose_direct_exchange' %}" class="btn btn-outline-primary btn-sm mt-auto w-100">
+              <i class="bi bi-arrow-left-right me-1"></i> Swap with this Bed
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 p-5 text-center text-muted">
+        <i class="bi bi-search fs-1 d-block mb-2"></i>
+        No beds match your filter criteria. Try expanding your search options.
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

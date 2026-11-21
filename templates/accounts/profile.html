@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}My Profile – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12 col-lg-4">
+      <div class="card card-custom p-4 text-center">
+        <div class="rounded-circle bg-primary text-white mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+          {{ user.first_name|default:user.username|make_list|first|upper }}
+        </div>
+        <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
+        <span class="badge bg-primary px-3 py-2 mb-3" style="font-size: 0.85rem;">{{ user.get_role_display }}</span>
+        <p class="text-muted small mb-0"><i class="bi bi-envelope me-1"></i> {{ user.email }}</p>
+        <p class="text-muted small"><i class="bi bi-telephone me-1"></i> {{ user.phone_number|default:'Not provided' }}</p>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <div class="card card-custom p-4">
+        <h5 class="fw-bold border-bottom pb-2 mb-3">Academic & Platform Details</h5>
+        
+        {% if user.is_student and user.student_profile %}
+          {% with stu=user.student_profile %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="text-muted small">Student ID</label>
+                <div class="fw-semibold">{{ stu.student_id }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">University Registration No.</label>
+                <div class="fw-semibold">{{ stu.registration_number }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Degree Course</label>
+                <div class="fw-semibold">{{ stu.course }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Department</label>
+                <div class="fw-semibold">{{ stu.department }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Academic Year</label>
+                <div class="fw-semibold">{{ stu.academic_year }} (Admitted {{ stu.admission_year }})</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Gender</label>
+                <div class="fw-semibold">{{ stu.gender }}</div>
+              </div>
+              <div class="col-12"><hr class="my-2"></div>
+              <div class="col-md-4">
+                <label class="text-muted small">Current Hostel</label>
+                <div class="fw-bold text-primary">{{ stu.current_hostel.name|default:'Unassigned' }}</div>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small">Room & Bed</label>
+                <div class="fw-bold text-success">{{ stu.current_bed.full_code|default:'None' }}</div>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small">Room Category</label>
+                <div class="fw-semibold">{{ stu.current_room.category.name|default:'N/A' }}</div>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small">Fee Status</label>
+                <span class="badge {% if stu.fee_status == 'PAID' %}bg-success{% else %}bg-danger{% endif %}">
+                  {{ stu.get_fee_status_display }}
+                </span>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small">Disciplinary Status</label>
+                <span class="badge {% if stu.disciplinary_status == 'CLEAN' %}bg-success{% else %}bg-warning{% endif %}">
+                  {{ stu.get_disciplinary_status_display }}
+                </span>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small">Account Status</label>
+                <span class="badge bg-info text-dark">{{ stu.get_account_status_display }}</span>
+              </div>
+            </div>
+          {% endwith %}
+        {% elif user.is_warden and user.warden_profile %}
+          {% with w=user.warden_profile %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="text-muted small">Hostel Assignment</label>
+                <div class="fw-bold text-primary">{{ w.hostel.name|default:'Unassigned' }} ({{ w.hostel.code }})</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Role Scope</label>
+                <div class="fw-semibold">{% if w.is_chief %}Chief University Warden{% else %}Hostel Resident Warden{% endif %}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Office Location</label>
+                <div class="fw-semibold">{{ w.office_room|default:'Main Office' }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">Official Phone</label>
+                <div class="fw-semibold">{{ w.contact_number|default:'N/A' }}</div>
+              </div>
+            </div>
+          {% endwith %}
+        {% else %}
+          <p class="text-muted">Staff / Administrative Profile</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

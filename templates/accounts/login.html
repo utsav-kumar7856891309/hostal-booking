@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Sign In – HostelX Platform{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-split-card">
+    <div class="row g-0">
+      
+      <!-- Left Column: Institutional Brand & Features Showcase -->
+      <div class="col-12 col-lg-5 auth-hero-pane">
+        <div>
+          <!-- Logo & Institution -->
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-3 bg-info text-dark p-2 fs-4 shadow-sm">
+              <i class="bi bi-buildings-fill"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0 text-white letter-spacing-tight">Hostel<span class="text-info">X</span></h4>
+              <span class="text-white-50" style="font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">Campus Life & Housing</span>
+            </div>
+          </div>
+
+          <h3 class="fw-bold text-white mb-2" style="line-height: 1.25;">
+            Smart Campus Living & Seamless Bed Exchanges
+          </h3>
+          <p class="text-white-50 small mb-4">
+            Apex National Institute of Technology official centralized hostel booking and cyclic exchange portal.
+          </p>
+
+          <!-- Feature Highlight Cards -->
+          <div class="auth-feature-pill">
+            <i class="bi bi-door-open-fill text-info"></i>
+            <div>
+              <div class="fw-bold text-white">Direct Vacant Bed Booking</div>
+              <div class="text-white-50" style="font-size: 0.75rem;">Instant room reservation with automated allotment</div>
+            </div>
+          </div>
+
+          <div class="auth-feature-pill">
+            <i class="bi bi-arrow-repeat text-info"></i>
+            <div>
+              <div class="fw-bold text-white">Cyclic Room Exchanges</div>
+              <div class="text-white-50" style="font-size: 0.75rem;">Graph-powered 2, 3, 4, and 5-student directed cycles</div>
+            </div>
+          </div>
+
+          <div class="auth-feature-pill">
+            <i class="bi bi-shield-check text-info"></i>
+            <div>
+              <div class="fw-bold text-white">Warden Authorization Workflow</div>
+              <div class="text-white-50" style="font-size: 0.75rem;">Single & cross-hostel approvals with verified occupancy</div>
+            </div>
+          </div>
+
+          <div class="auth-feature-pill">
+            <i class="bi bi-cup-hot-fill text-info"></i>
+            <div>
+              <div class="fw-bold text-white">Mess, Laundry & 24/7 Maintenance</div>
+              <div class="text-white-50" style="font-size: 0.75rem;">Weekly dining schedules and rapid ticket dispatch</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom University Credential -->
+        <div class="mt-4 pt-3 border-top border-white border-opacity-10 text-white-50 small d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-geo-alt me-1"></i> Knowledge City Campus</span>
+          <span class="badge bg-white bg-opacity-10 text-white border border-white border-opacity-25">4 Hostels • 348 Beds</span>
+        </div>
+      </div>
+
+      <!-- Right Column: Login Form & Instant Demo Switcher -->
+      <div class="col-12 col-lg-7 auth-form-pane">
+        
+        <!-- Segmented Tab Switcher -->
+        <div class="auth-tab-group">
+          <a href="{% url 'login' %}" class="auth-tab-btn active">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Account
+          </a>
+          <a href="{% url 'register' %}" class="auth-tab-btn">
+            <i class="bi bi-person-plus me-1"></i> New Student Register
+          </a>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-bold text-navy mb-1">Welcome Back</h4>
+          <p class="text-muted small mb-0">Enter your credentials to access your hostel room and university dashboard.</p>
+        </div>
+
+        {% if form.errors %}
+          <div class="alert alert-danger py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div>Invalid username or password. Please re-check or use quick demo fill below.</div>
+          </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-navy">Username or Student ID</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" id="id_username" class="form-control form-control-custom border-start-0" placeholder="e.g. student_rahul or admin" required autofocus>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="form-label small fw-bold text-navy mb-0">Password</label>
+              <button type="button" class="btn btn-link p-0 text-decoration-none small text-muted" onclick="togglePasswordVisibility()">
+                <i class="bi bi-eye" id="toggleIcon"></i> <span id="toggleText" style="font-size:0.75rem;">Show</span>
+              </button>
+            </div>
+            <div class="input-group mt-1">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" id="id_password" class="form-control form-control-custom border-start-0" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+              <label class="form-check-label small text-muted" for="rememberMe">Remember me</label>
+            </div>
+            <a href="{% url 'room_search' %}" class="small text-decoration-none text-primary">Browse Beds &rarr;</a>
+          </div>
+
+          <div class="d-grid mb-4">
+            <button type="submit" class="btn btn-primary-custom py-2 fw-bold fs-6">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Portal
+            </button>
+          </div>
+        </form>
+
+        <!-- Compact & Elegant Quick Demo Accounts Selector -->
+        <div class="pt-3 border-top">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="small fw-bold text-navy text-uppercase" style="font-size:0.75rem; letter-spacing:0.04em;">
+              <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Demo Roles (1-Click Auto-Fill)
+            </span>
+            <span class="badge bg-light text-muted border" id="demoFilledBadge" style="display:none; font-size:0.68rem;">Filled!</span>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="demo-role-pill" onclick="fillRole('student_rahul', 'HostelX@2026', 'Rahul Sharma (Student)')">
+              <i class="bi bi-person-fill text-primary"></i> Rahul (Boys A - AC Single)
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('student_priya', 'HostelX@2026', 'Priya Nair (Student)')">
+              <i class="bi bi-person-fill text-danger"></i> Priya (Girls A - AC Single)
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('warden_ha', 'HostelX@2026', 'Dr. Suresh Verma (Warden)')">
+              <i class="bi bi-shield-check text-info"></i> Warden (Boys A)
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('warden_ga', 'HostelX@2026', 'Dr. Sunita Deshmukh (Warden)')">
+              <i class="bi bi-shield-check text-info"></i> Warden (Girls A)
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('chief_warden', 'HostelX@2026', 'Dr. Rajesh Sharma (Chief Warden)')">
+              <i class="bi bi-star-fill text-warning"></i> Chief Warden
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('admin', 'HostelX@2026', 'University Admin (Control Hub)')">
+              <i class="bi bi-gear-fill text-dark"></i> Admin Control Hub
+            </button>
+
+            <button type="button" class="demo-role-pill" onclick="fillRole('dean', 'HostelX@2026', 'Prof. Meenakshi (Dean)')">
+              <i class="bi bi-graph-up text-success"></i> Dean Analytics
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center mt-3 pt-2">
+          <span class="text-muted small">New university student?</span>
+          <a href="{% url 'register' %}" class="small fw-bold text-primary text-decoration-none ms-1">
+            Create an Account &rarr;
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function fillRole(username, password, label) {
+  document.getElementById('id_username').value = username;
+  document.getElementById('id_password').value = password;
+  
+  // Flash confirmation badge
+  const badge = document.getElementById('demoFilledBadge');
+  badge.textContent = 'Auto-filled: ' + label;
+  badge.className = 'badge bg-success text-white border';
+  badge.style.display = 'inline-block';
+  
+  // Highlight active role pill
+  document.querySelectorAll('.demo-role-pill').forEach(btn => btn.classList.remove('active-role'));
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add('active-role');
+  }
+}
+
+function togglePasswordVisibility() {
+  const pwdInput = document.getElementById('id_password');
+  const icon = document.getElementById('toggleIcon');
+  const text = document.getElementById('toggleText');
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+    text.textContent = 'Hide';
+  } else {
+    pwdInput.type = 'password';
+    icon.className = 'bi bi-eye';
+    text.textContent = 'Show';
+  }
+}
+</script>
+{% endblock %}

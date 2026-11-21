@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Reports & Audit Logs – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">System Reports & Audit Trails</h3>
+      <p class="text-muted small mb-0">Immutable compliance logs, exchange execution audits and historical records</p>
+    </div>
+  </div>
+
+  <!-- Historical Transfer Records -->
+  <div class="card card-custom mb-4">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-file-earmark-text text-primary"></i> Executed Room Transfer Log</h5>
+      <span class="badge bg-secondary">{{ transfer_records.count }} Records</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Transfer ID</th>
+              <th>Student</th>
+              <th>Vacated Bed</th>
+              <th>New Assigned Bed</th>
+              <th>Date</th>
+              <th>Certificate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tr in transfer_records %}
+              <tr>
+                <td class="fw-bold text-primary">{{ tr.transfer_id }}</td>
+                <td>{{ tr.student.full_name }} ({{ tr.student.student_id }})</td>
+                <td>{{ tr.previous_bed.full_code }}</td>
+                <td class="fw-bold text-success">{{ tr.new_bed.full_code }}</td>
+                <td class="text-muted">{{ tr.transfer_date|date:"M d, Y H:i" }}</td>
+                <td>
+                  <a href="{% url 'view_transfer_letter_html' tr.id %}" class="btn btn-outline-secondary btn-sm py-0 px-2">View</a>
+                  <a href="{% url 'download_transfer_letter_pdf' tr.id %}" class="btn btn-outline-danger btn-sm py-0 px-2">PDF</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center text-muted p-4">No completed transfers recorded.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Audit Trail -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-shield-lock-fill text-dark"></i> System Audit Log Entries</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for audit in recent_audits %}
+              <tr>
+                <td class="text-muted">{{ audit.timestamp|date:"M d, Y H:i:s" }}</td>
+                <td class="fw-bold">{{ audit.actor|default:'System Engine' }}</td>
+                <td><span class="badge bg-light text-dark border">{{ audit.action }}</span></td>
+                <td>{{ audit.entity_type }} #{{ audit.entity_id }}</td>
+                <td>{{ audit.description }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted p-4">No audit entries recorded yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

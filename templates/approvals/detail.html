@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Authorize Exchange Proposal – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      
+      <div class="card card-custom p-4">
+        <h4 class="fw-bold text-navy mb-1"><i class="bi bi-shield-check text-primary me-2"></i> Warden Authorization Decision</h4>
+        <p class="text-muted small mb-4">Review proposed room transfer details and authorize or reject with official remarks.</p>
+
+        <div class="card bg-light p-3 mb-4 border">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold text-primary">{{ proposal.proposal_code }}</span>
+            <span class="badge bg-secondary">{{ proposal.cycle_length }}-Student Cycle</span>
+          </div>
+          
+          <h6 class="small fw-bold text-muted mb-2">Proposed Bed Rotations:</h6>
+          <ul class="list-group list-group-flush mb-0 small">
+            {% for p in participants %}
+              <li class="list-group-item bg-transparent px-0 py-1">
+                <b>{{ p.student.full_name }}</b> ({{ p.student.student_id }}): 
+                <span class="text-danger">{{ p.from_bed.full_code }}</span> &rarr; <span class="text-success fw-bold">{{ p.to_bed.full_code }}</span>
+                <span class="text-muted">({{ p.to_bed.room.category.name }})</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <form method="post" action="{% url 'approval_detail' proposal.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="hostel_id" value="{{ target_hostel.id }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy">Hostel Being Approved For</label>
+            <input type="text" class="form-control" value="{{ target_hostel.name }} ({{ target_hostel.code }})" disabled>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-navy">Warden Official Remarks / Conditions</label>
+            <textarea name="remarks" class="form-control" rows="3" placeholder="e.g. Allocation verified against occupancy records. Approved for transfer."></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'warden_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            
+            <div class="d-flex gap-2">
+              <button type="submit" name="action" value="reject" class="btn btn-danger px-3">
+                <i class="bi bi-x-circle me-1"></i> Reject Proposal
+              </button>
+              <button type="submit" name="action" value="approve" class="btn btn-success px-4 fw-semibold">
+                <i class="bi bi-check-circle me-1"></i> Grant Warden Approval
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Hostel Warden Dashboard – HostelX{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  
+  <!-- Header with Hostel Switcher -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-0">Hostel Management Console</h3>
+      <p class="text-muted small mb-0">Assigned Hostel: <span class="fw-bold text-primary">{{ hostel.name }} ({{ hostel.code }})</span> • Gender: {{ hostel.gender }}</p>
+    </div>
+    
+    <!-- Hostel Selector for Chief Warden / Admin -->
+    {% if user.is_chief_warden or user.is_admin_user %}
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted fw-bold">Select Hostel:</label>
+        <div class="btn-group" role="group">
+          {% for h in all_hostels %}
+            <a href="?hostel={{ h.code }}" class="btn btn-sm {% if h.code == hostel.code %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+              {{ h.code }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Key Metrics Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Total Rooms</div>
+        <div class="stat-val text-dark">{{ hostel.total_rooms_count }}</div>
+        <small class="text-muted">{{ hostel.total_floors }} Floors</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Total Beds</div>
+        <div class="stat-val text-primary">{{ total_beds }}</div>
+        <small class="text-muted">Capacity</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Occupied Beds</div>
+        <div class="stat-val text-info">{{ occupied_beds }}</div>
+        <small class="text-muted">Active residents</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Vacant Beds</div>
+        <div class="stat-val text-success">{{ vacant_beds }}</div>
+        <small class="text-muted">Ready to allot</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Maintenance / Block</div>
+        <div class="stat-val text-danger">{{ maintenance_beds|add:blocked_beds }}</div>
+        <small class="text-muted">Unavailable</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="stat-card">
+        <div class="stat-lbl">Occupancy Rate</div>
+        <div class="stat-val text-warning">{{ occupancy_pct }}%</div>
+        <div class="progress mt-1" style="height: 4px;">
+          <div class="progress-bar bg-warning" role="progressbar" style="width: {{ occupancy_pct }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Approvals Section -->
+  <div class="card card-custom mb-4 border-primary">
+    <div class="card-header-custom bg-light">
+      <h5 class="card-title-custom text-primary">
+        <i class="bi bi-shield-exclamation text-danger"></i> Pending Exchange Approvals for {{ hostel.name }}
+      </h5>
+      <span class="badge bg-danger">{{ pending_approvals.count }} Pending</span>
+    </div>
+    <div class="card-body p-0">
+      {% if pending_approvals %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Proposal ID</th>
+                <th>Cycle Length</th>
+                <th>Involved Students & Beds</th>
+                <th>Status</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for appr in pending_approvals %}
+                <tr>
+                  <td class="fw-bold">{{ appr.proposal.proposal_code }}</td>
+                  <td><span class="badge bg-secondary">{{ appr.proposal.cycle_length }}-Student Cycle</span></td>
+                  <td>
+                    {% for p in appr.proposal.participants.all %}
+                      <div class="small">
+                        <b>{{ p.student.full_name }}</b> ({{ p.student.student_id }}): 
+                        <span class="text-danger">{{ p.from_bed.full_code }}</span> &rarr; <span class="text-success">{{ p.to_bed.full_code }}</span>
+                      </div>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    <span class="badge bg-warning text-dark">Awaiting Warden Review</span>
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'approval_detail' appr.proposal.id %}" class="btn btn-primary btn-sm">
+                      <i class="bi bi-check2-circle me-1"></i> Review & Decide
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-3 text-center text-muted small">
+          <i class="bi bi-check-all text-success fs-3 d-block mb-1"></i>
+          All exchange proposals for this hostel are reviewed. No pending approvals!
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Interactive Bed Occupancy Floor Grid Visualizer -->
+  <div class="card card-custom mb-4" id="occupancy">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Real-Time Bed Occupancy Floor Grid</h5>
+      <div class="d-flex align-items-center gap-3 small">
+        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#3b82f6;"></span> Occupied</span>
+        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#10b981;"></span> Vacant</span>
+        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#f59e0b;"></span> Blocked</span>
+        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#ef4444;"></span> Maintenance</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% for floor_no, room_list in floors.items %}
+        <div class="mb-4">
+          <h6 class="fw-bold border-bottom pb-1 mb-2 text-secondary">
+            Floor {{ floor_no }} <span class="badge bg-light text-dark fw-normal">({{ room_list|length }} Rooms)</span>
+          </h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for r in room_list %}
+              <div class="border rounded p-2 bg-light text-center" style="min-width: 125px;">
+                <div class="fw-bold small text-navy">{{ r.room_number }}</div>
+                <div class="text-muted" style="font-size: 0.65rem;">{{ r.category.name|truncatechars:18 }}</div>
+                <div class="d-flex justify-content-center gap-1 mt-2">
+                  {% for b in r.beds.all %}
+                    <div class="bed-tile {% if b.status == 'OCCUPIED' %}bed-occupied{% elif b.status == 'VACANT' %}bed-vacant{% elif b.status == 'BLOCKED' %}bed-blocked{% else %}bed-maintenance{% endif %}"
+                         title="{{ b.full_code }} - {{ b.get_status_display }}">
+                      {{ b.bed_identifier }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Resident Students Directory -->
+  <div class="card card-custom">
+    <div class="card-header-custom">
+      <h5 class="card-title-custom"><i class="bi bi-people-fill text-primary"></i> Resident Students Directory</h5>
+      <span class="badge bg-secondary">{{ students.count }} Resident Allotments</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Student ID</th>
+              <th>Full Name</th>
+              <th>Room & Bed</th>
+              <th>Category</th>
+              <th>Course & Year</th>
+              <th>Fee Status</th>
+              <th>Discipline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stu in students %}
+              <tr>
+                <td class="fw-bold">{{ stu.student_id }}</td>
+                <td>{{ stu.full_name }}</td>
+                <td class="fw-bold text-primary">{{ stu.current_bed.full_code|default:'None' }}</td>
+                <td>{{ stu.current_room.category.name|default:'N/A' }}</td>
+                <td>{{ stu.course }} ({{ stu.academic_year }})</td>
+                <td>
+                  <span class="badge {% if stu.fee_status == 'PAID' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ stu.fee_status }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge {% if stu.disciplinary_status == 'CLEAN' %}bg-success{% else %}bg-warning{% endif %}">
+                    {{ stu.disciplinary_status }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

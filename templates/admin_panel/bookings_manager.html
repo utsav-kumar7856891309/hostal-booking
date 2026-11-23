@@ -85,9 +85,7 @@
                 <td class="text-muted">{{ b.booking_date|date:"M d, Y H:i" }}</td>
                 <td><span class="badge bg-success">{{ b.status }}</span></td>
                 <td class="text-end">
-                  <a href="{% url 'booking_receipt' b.id %}" target="_blank" class="btn btn-outline-secondary btn-sm py-0 px-2">
-                    <i class="bi bi-file-earmark-text me-1"></i> View Order
-                  </a>
+                  <span class="badge bg-light text-dark border">#{{ b.booking_id }}</span>
                 </td>
               </tr>
             {% empty %}
@@ -103,3 +101,4 @@
 
 </div>
 {% endblock %}
+

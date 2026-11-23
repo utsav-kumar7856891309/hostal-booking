@@ -9,8 +9,6 @@ from rooms.models import Room, Bed, RoomCategory, RoomPricing
 from students.models import Student
 from approvals.models import WardenApproval
 from exchanges.models import ExchangeProposal, PolicyRule
-from maintenance.models import MaintenanceRequest
-from laundry.models import LaundryRequest
 from finance.models import StudentAccount, FinancialTransaction
 
 @login_required
@@ -56,12 +54,6 @@ def warden_dashboard(request):
     # Hostel resident students
     students = Student.objects.filter(current_hostel=hostel).select_related('current_room', 'current_bed', 'current_room__category')[:50]
 
-    # Maintenance complaints in this hostel
-    recent_maintenance = MaintenanceRequest.objects.filter(hostel=hostel).order_by('-created_at')[:10]
-
-    # Laundry requests in this hostel
-    recent_laundry = LaundryRequest.objects.filter(hostel=hostel).order_by('-created_at')[:10]
-
     all_hostels = Hostel.objects.all()
 
     context = {
@@ -77,8 +69,6 @@ def warden_dashboard(request):
         'floors': dict(sorted(floors.items())),
         'pending_approvals': pending_approvals,
         'students': students,
-        'recent_maintenance': recent_maintenance,
-        'recent_laundry': recent_laundry,
     }
     return render(request, 'dashboards/warden_dashboard.html', context)
 
@@ -163,3 +153,122 @@ def admin_dashboard(request):
         'total_completed_exchanges': total_completed_exchanges,
     }
     return render(request, 'dashboards/admin_dashboard.html', context)
+
+@login_required
+def hostel_occupancy_view(request):
+    """
+    Dedicated Real-Time Bed & Room Occupancy Grid for Wardens.
+    """
+    user = request.user
+    if not (user.is_warden or user.is_chief_warden or user.is_admin_user):
+        messages.error(request, "Access restricted to hostel wardens.")
+        return redirect('dashboard_redirect')
+
+    warden = getattr(user, 'warden_profile', None)
+    selected_hostel_code = request.GET.get('hostel')
+
+    if selected_hostel_code:
+        hostel = get_object_or_404(Hostel, code=selected_hostel_code)
+    elif warden and warden.hostel:
+        hostel = warden.hostel
+    else:
+        hostel = Hostel.objects.first()
+
+    floor_filter = request.GET.get('floor')
+    category_filter = request.GET.get('category')
+
+    rooms_qs = Room.objects.filter(hostel=hostel).select_related('category').prefetch_related(
+        'beds', 'beds__current_occupant', 'beds__current_occupant__user'
+    )
+
+    if floor_filter and floor_filter.isdigit():
+        rooms_qs = rooms_qs.filter(floor=int(floor_filter))
+    if category_filter and category_filter.isdigit():
+        rooms_qs = rooms_qs.filter(category_id=int(category_filter))
+
+    beds = Bed.objects.filter(room__hostel=hostel)
+    total_beds = beds.count()
+    occupied_beds = beds.filter(status='OCCUPIED').count()
+    vacant_beds = beds.filter(status='VACANT').count()
+    blocked_beds = beds.filter(status='BLOCKED').count()
+    maintenance_beds = beds.filter(status='MAINTENANCE').count()
+    occupancy_pct = round((occupied_beds / total_beds * 100), 1) if total_beds > 0 else 0
+
+    floors = {}
+    for r in rooms_qs:
+        floors.setdefault(r.floor, []).append(r)
+
+    all_hostels = Hostel.objects.all()
+    categories = RoomCategory.objects.all()
+
+    context = {
+        'warden': warden,
+        'hostel': hostel,
+        'all_hostels': all_hostels,
+        'categories': categories,
+        'total_beds': total_beds,
+        'occupied_beds': occupied_beds,
+        'vacant_beds': vacant_beds,
+        'blocked_beds': blocked_beds,
+        'maintenance_beds': maintenance_beds,
+        'occupancy_pct': occupancy_pct,
+        'floors': dict(sorted(floors.items())),
+        'selected_floor': int(floor_filter) if floor_filter and floor_filter.isdigit() else None,
+        'selected_category': int(category_filter) if category_filter and category_filter.isdigit() else None,
+    }
+    return render(request, 'hostels/occupancy.html', context)
+
+@login_required
+def hostel_residents_view(request):
+    """
+    Dedicated Student Residents Directory for Wardens.
+    """
+    user = request.user
+    if not (user.is_warden or user.is_chief_warden or user.is_admin_user):
+        messages.error(request, "Access restricted to hostel wardens.")
+        return redirect('dashboard_redirect')
+
+    warden = getattr(user, 'warden_profile', None)
+    selected_hostel_code = request.GET.get('hostel')
+
+    if selected_hostel_code:
+        hostel = get_object_or_404(Hostel, code=selected_hostel_code)
+    elif warden and warden.hostel:
+        hostel = warden.hostel
+    else:
+        hostel = Hostel.objects.first()
+
+    search_q = request.GET.get('q', '').strip()
+    fee_filter = request.GET.get('fee_status')
+    floor_filter = request.GET.get('floor')
+
+    students_qs = Student.objects.filter(current_hostel=hostel).select_related(
+        'user', 'current_room', 'current_bed', 'current_room__category', 'current_hostel'
+    ).order_by('current_room__floor', 'current_room__room_number', 'current_bed__bed_identifier')
+
+    if search_q:
+        students_qs = students_qs.filter(
+            Q(registration_number__icontains=search_q) |
+            Q(full_name__icontains=search_q) |
+            Q(student_id__icontains=search_q) |
+            Q(current_bed__bed_identifier__icontains=search_q) |
+            Q(current_room__room_number__icontains=search_q)
+        )
+    if fee_filter:
+        students_qs = students_qs.filter(fee_status=fee_filter)
+    if floor_filter and floor_filter.isdigit():
+        students_qs = students_qs.filter(current_room__floor=int(floor_filter))
+
+    all_hostels = Hostel.objects.all()
+
+    context = {
+        'warden': warden,
+        'hostel': hostel,
+        'all_hostels': all_hostels,
+        'students': students_qs,
+        'total_residents': students_qs.count(),
+        'search_q': search_q,
+        'fee_filter': fee_filter,
+        'floor_filter': int(floor_filter) if floor_filter and floor_filter.isdigit() else None,
+    }
+    return render(request, 'hostels/residents.html', context)

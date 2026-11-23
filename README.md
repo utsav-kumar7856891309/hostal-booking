@@ -58,7 +58,7 @@ It provides a comprehensive solution for university hostel operations: **direct 
 
 ### 1. Requirements
 - Python 3.12+ (Tested on Python 3.14)
-- SQLite 3 (Default Django database `db.sqlite3`, no external database required)
+- PostgreSQL 14+ (or SQLite 3 via `USE_SQLITE=True`)
 
 ### 2. Installation
 Clone or navigate to the project directory:
@@ -71,17 +71,40 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-### 3. Database Initialization & Seeding
-Apply migrations (creates `db.sqlite3`):
-```bash
-python manage.py migrate
-```
+### 3. Database Setup & Initialization (PostgreSQL)
 
-Seed the database with comprehensive university data:
-```bash
-python manage.py seed_hostel_data
-```
-*This seeds 1 University, 4 Hostels, 6 Categories, 120 Rooms, 348 Beds, 318 Fictional Students, 4 Wardens, Chief Warden, Dean, Admin, Mess Menus, and Services.*
+1. **Create the PostgreSQL Database:**
+   ```sql
+   CREATE DATABASE hostel_db;
+   ```
+
+2. **Configure `.env`:**
+   Copy `.env.example` to `.env` and verify your credentials:
+   ```env
+   DATABASE_ENGINE=django.db.backends.postgresql
+   DATABASE_NAME=hostel_db
+   DATABASE_USER=postgres
+   DATABASE_PASSWORD=your_password
+   DATABASE_HOST=localhost
+   DATABASE_PORT=5432
+   ```
+
+3. **Apply Migrations:**
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **Seed Database or Restore Existing Data:**
+   - **Option A (Seed fresh university data):**
+     ```bash
+     python manage.py seed_hostel_data
+     ```
+     *This seeds 1 University, 4 Hostels, 6 Categories, 120 Rooms, 348 Beds, 318 Fictional Students, 4 Wardens, Chief Warden, Dean, Admin, Mess Menus, and Services.*
+   
+   - **Option B (Restore data dumped from previous database):**
+     ```bash
+     python manage.py loaddata datadump.json
+     ```
 
 ### 4. Run the Development Server
 ```bash
@@ -99,8 +122,10 @@ http://127.0.0.1:8000/
 All demo accounts use password: **`HostelX@2026`**  
 *(The login page at `/accounts/login/` features 1-click demo credential fillers for instant testing).*
 
-| Role | Username | Full Name / Description | Allotted Bed / Scope |
+| Role | Username / Reg No | Full Name / Description | Allotted Bed / Scope |
 |---|---|---|---|
+| **Day Scholar Student** | `12313714` | Aarav Sharma | Day Scholar (Off-Campus, tests direct Hostel Room Booking) |
+| **Day Scholar Student** | `12313715` | Rohan Gupta | Day Scholar (3rd Year Mechanical) |
 | **Student (Male)** | `student_rahul` | Rahul Sharma | H001-101-B1 (Boys Hostel A, AC Single) |
 | **Student (Male)** | `student_amit` | Amit Verma | H001-102-B1 (Boys Hostel A, AC Double) |
 | **Student (Male)** | `student_vikram` | Vikram Rao | H002-101-B1 (Boys Hostel B, AC Single) |

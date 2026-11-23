@@ -4,19 +4,40 @@
 {% block content %}
 <div class="container-fluid">
   
-  <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-      <h3 class="fw-bold text-navy mb-0">Student Directory & Account Controls</h3>
-      <p class="text-muted small mb-0">Manage student accounts, fee statuses, disciplinary holds, and room de-allocations</p>
+      <h3 class="fw-bold text-navy mb-0">Central University Student Database</h3>
+      <p class="text-muted small mb-0">Master university student registry — managing Hostel Residents and Day Scholar profiles, accounts, and allocations</p>
     </div>
     <a href="{% url 'admin_overview' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to Admin Hub</a>
+    <a href="{% url 'admin_send_message' %}" class="btn btn-sm text-white fw-bold ms-2" style="background: var(--ums-orange);">
+      <i class="bi bi-envelope-fill me-1"></i> Send Message to Student(s)
+    </a>
   </div>
 
-  <!-- Search Card -->
+  <!-- Filter & Search Card -->
   <div class="card card-custom p-3 mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+      <div class="btn-group btn-group-sm" role="group">
+        <a href="{% url 'admin_students_manager' %}" class="btn {% if not selected_type %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          All Students ({{ total_count }})
+        </a>
+        <a href="{% url 'admin_students_manager' %}?type=HOSTEL" class="btn {% if selected_type == 'HOSTEL' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          <i class="bi bi-buildings me-1"></i> Hostel Residents ({{ hostel_count }})
+        </a>
+        <a href="{% url 'admin_students_manager' %}?type=DAY_SCHOLAR" class="btn {% if selected_type == 'DAY_SCHOLAR' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          <i class="bi bi-backpack me-1"></i> Day Scholars ({{ day_scholar_count }})
+        </a>
+      </div>
+      <span class="badge bg-light text-muted border">Pre-Enrolled University Database Only</span>
+    </div>
+
     <form method="get" action="{% url 'admin_students_manager' %}" class="row g-2">
+      {% if selected_type %}
+        <input type="hidden" name="type" value="{{ selected_type }}">
+      {% endif %}
       <div class="col-md-10">
-        <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm" placeholder="Search by student name, student ID, or registration number...">
+        <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm" placeholder="Search by student name, student ID, or registration number (e.g. 12313714)...">
       </div>
       <div class="col-md-2">
         <button type="submit" class="btn btn-primary-custom btn-sm w-100">
@@ -29,8 +50,8 @@
   <!-- Students Table -->
   <div class="card card-custom">
     <div class="card-header-custom">
-      <h5 class="card-title-custom"><i class="bi bi-people-fill text-primary"></i> Students Roster</h5>
-      <span class="badge bg-secondary">Total: {{ total_count }} Students</span>
+      <h5 class="card-title-custom"><i class="bi bi-people-fill text-primary"></i> University Student Registry</h5>
+      <span class="badge bg-secondary">Showing {{ students|length }} of {{ total_count }} Students</span>
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -40,7 +61,7 @@
               <th>ID & Name</th>
               <th>Gender</th>
               <th>Course & Year</th>
-              <th>Current Allotment</th>
+              <th>Residency Status</th>
               <th>Fee Status</th>
               <th>Disciplinary Status</th>
               <th>Account Status</th>
@@ -52,15 +73,17 @@
               <tr>
                 <td>
                   <div class="fw-bold">{{ s.full_name }}</div>
-                  <div class="text-muted" style="font-size:0.7rem;">ID: {{ s.student_id }} • Reg: {{ s.registration_number }}</div>
+                  <div class="text-muted" style="font-size:0.7rem;">Reg: <b>{{ s.registration_number }}</b> • ID: {{ s.student_id }}</div>
                 </td>
                 <td>{{ s.gender }}</td>
                 <td>{{ s.course }} ({{ s.academic_year }})</td>
                 <td>
                   {% if s.current_bed %}
-                    <span class="badge bg-primary">{{ s.current_bed.full_code }}</span>
+                    <span class="badge bg-primary" title="{{ s.current_hostel.name }}"><i class="bi bi-door-closed me-1"></i>{{ s.current_bed.full_code }}</span>
+                    <span class="badge bg-light text-primary border" style="font-size:0.65rem;">Resident</span>
                   {% else %}
-                    <span class="badge bg-secondary">Unallocated</span>
+                    <span class="badge bg-info text-dark"><i class="bi bi-backpack me-1"></i>Day Scholar</span>
+                    <span class="badge bg-light text-muted border" style="font-size:0.65rem;">Off-Campus</span>
                   {% endif %}
                 </td>
                 <td>
@@ -123,3 +146,4 @@
 
 </div>
 {% endblock %}
+

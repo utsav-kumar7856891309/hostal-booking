@@ -19,6 +19,5 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Media uploads (optional, keeping directory structure)
-media/maintenance/*
-!media/maintenance/.gitkeep
+media/*
+!media/.gitkeep

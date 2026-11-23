@@ -39,90 +39,36 @@ class DirectBookingAndAdminTests(TestCase):
         self.client = Client()
 
     def test_student_registration_and_login(self):
-        # 1. Register a new student account
-        response = self.client.post('/accounts/register/', {
-            'username': 'new_student_user',
-            'password': 'testpassword123',
-            'confirm_password': 'testpassword123',
-            'first_name': 'New',
-            'last_name': 'Student',
-            'email': 'new_student@test.com',
-            'phone': '9876543210',
-            'gender': 'Male',
-            'course': 'B.Tech Computer Science',
-            'department': 'CSE',
-            'academic_year': '1st Year',
-            'admission_year': 2026,
-        })
-        self.assertEqual(response.status_code, 302) # Redirects to room booking catalog
+        # 1. Verify public registration is disabled and redirects to login
+        reg_response = self.client.get('/accounts/register/')
+        self.assertEqual(reg_response.status_code, 302)
+        self.assertEqual(reg_response.url, '/accounts/login/')
 
-        # Verify user & student profile created
-        user = User.objects.get(username='new_student_user')
-        self.assertTrue(user.is_student)
-        student = Student.objects.get(user=user)
-        self.assertEqual(student.gender, 'Male')
-        self.assertIsNone(student.current_bed) # Unallocated initially
-
-        # 2. Test logging out and logging back in
-        self.client.logout()
-        login_res = self.client.post('/accounts/login/', {
-            'username': 'new_student_user',
-            'password': 'testpassword123'
-        })
-        self.assertEqual(login_res.status_code, 302)
-
-    def test_direct_room_booking_flow(self):
-        # Register and login student
-        user = User.objects.create_user(username='booking_student', password='password123', role=User.Role.STUDENT)
+        # 2. Create pre-enrolled Central University Day Scholar student
+        user = User.objects.create_user(username='12313714', password='testpassword123', role=User.Role.STUDENT)
         student = Student.objects.create(
             user=user,
-            student_id='STU_BKG_TEST',
-            registration_number='REG_BKG_TEST',
-            full_name='Booking Tester',
-            email='tester@test.com',
-            mobile_number='9999999999',
+            student_id='STU_12313714',
+            registration_number='12313714',
+            full_name='Aarav Sharma',
+            email='aarav@test.com',
+            mobile_number='9876543210',
             gender='Male',
-            course='B.Tech CS',
-            academic_year='2nd Year'
+            student_type='DAY_SCHOLAR',
+            course='B.Tech Computer Science',
+            academic_year='2nd Year',
+            current_bed=None
         )
         StudentAccount.objects.create(student=student)
-        self.client.force_login(user)
 
-        # 1. View booking catalog
-        catalog_res = self.client.get('/rooms/book/')
-        self.assertEqual(catalog_res.status_code, 200)
-        self.assertContains(catalog_res, self.bed1.full_code)
-
-        # 2. View booking confirmation page
-        detail_res = self.client.get(f'/rooms/book/{self.bed1.id}/')
-        self.assertEqual(detail_res.status_code, 200)
-        self.assertContains(detail_res, '90000')
-
-        # 3. Confirm booking (POST)
-        confirm_res = self.client.post(f'/rooms/book/{self.bed1.id}/confirm/')
-        self.assertEqual(confirm_res.status_code, 302) # Redirects to receipt
-
-        # 4. Verify DB state
-        self.bed1.refresh_from_db()
-        self.assertEqual(self.bed1.status, 'OCCUPIED')
-
-        student.refresh_from_db()
-        self.assertEqual(student.current_bed_id, self.bed1.id)
-        self.assertEqual(student.current_hostel_id, self.hostel_boys.id)
-
-        # Verify RoomBooking record
-        booking = RoomBooking.objects.get(student=student, bed=self.bed1)
-        self.assertEqual(booking.status, 'CONFIRMED')
-        self.assertEqual(booking.annual_fee, Decimal('90000.00'))
-
-        # Verify active BedAllocation
-        alloc = BedAllocation.objects.get(student=student, bed=self.bed1, is_active=True)
-        self.assertIsNotNone(alloc)
-
-        # 5. View allotment receipt
-        receipt_res = self.client.get(f'/bookings/{booking.id}/')
-        self.assertEqual(receipt_res.status_code, 200)
-        self.assertContains(receipt_res, booking.booking_id)
+        # 3. Test logging in with Registration Number (portal=hostel_booking)
+        login_res = self.client.post('/accounts/login/', {
+            'username': '12313714',
+            'password': 'testpassword123',
+            'portal': 'hostel_booking'
+        })
+        self.assertEqual(login_res.status_code, 302)
+        self.assertEqual(login_res.url, '/dashboard/student/')
 
     def test_admin_control_hub_and_manual_allotment(self):
         self.client.force_login(self.admin_user)

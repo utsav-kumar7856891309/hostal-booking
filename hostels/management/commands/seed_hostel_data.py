@@ -12,10 +12,6 @@ from students.models import Student
 from allocations.models import BedAllocation
 from exchanges.models import PolicyRule
 from finance.models import StudentAccount
-from facilities.models import Facility
-from mess.models import MessMenu, MessRegistration
-from laundry.models import LaundryService, LaundryRequest
-from maintenance.models import MaintenanceRequest
 
 User = get_user_model()
 
@@ -379,11 +375,6 @@ class Command(BaseCommand):
                     defaults={'balance': Decimal('500.00'), 'outstanding_due': Decimal('0.00')}
                 )
 
-                # Mess Registration
-                MessRegistration.objects.get_or_create(
-                    student=stu,
-                    defaults={'hostel': target_hostel, 'dietary_preference': 'VEG', 'is_active': True}
-                )
                 demo_student_objs.append(stu)
 
             self.stdout.write(f"  [OK] Seeded {len(demo_student_objs)} key demo student accounts.")
@@ -450,10 +441,6 @@ class Command(BaseCommand):
                     student=stu,
                     defaults={'balance': Decimal('0.00'), 'outstanding_due': Decimal('0.00')}
                 )
-                MessRegistration.objects.get_or_create(
-                    student=stu,
-                    defaults={'hostel': hostel, 'dietary_preference': 'VEG' if i % 2 == 0 else 'NON_VEG', 'is_active': True}
-                )
 
             # Seed remaining female students (target: 155 females)
             female_available_beds = [b for b in female_beds if b.id not in allocated_beds]
@@ -516,149 +503,12 @@ class Command(BaseCommand):
                     student=stu,
                     defaults={'balance': Decimal('0.00'), 'outstanding_due': Decimal('0.00')}
                 )
-                MessRegistration.objects.get_or_create(
-                    student=stu,
-                    defaults={'hostel': hostel, 'dietary_preference': 'VEG' if i % 2 == 0 else 'NON_VEG', 'is_active': True}
-                )
 
             total_students_count = Student.objects.count()
             vacant_beds_count = Bed.objects.filter(status='VACANT').count()
             self.stdout.write(f"  [OK] Total students created: {total_students_count}. Vacant beds left: {vacant_beds_count}.")
 
-            # 9. Facilities (Shared)
-            facilities_data = [
-                ('Central University Library', 'Study & Research', 'Multi-storey library with 100,000+ technical volumes, digital journals, and silent air-conditioned reading halls.', 'Central Campus Quad', '24/7 Access'),
-                ('Campus Fitness & Gymnasium Suite', 'Health & Fitness', 'Modern fitness equipment, free weights, treadmills, and certified trainers available daily.', 'Sports Complex Annex', '6:00 AM - 10:00 PM'),
-                ('Indoor Badminton & Table Tennis Arena', 'Sports', 'Four synthetic badminton courts, Olympic-grade table tennis tables with floodlighting.', 'Student Activity Center', '6:00 AM - 10:30 PM'),
-                ('Campus High-Speed Wi-Fi Mesh', 'Connectivity', 'Gigabit WiFi 6 wireless connectivity across all hostel blocks and common zones.', 'All Hostels & Common Grounds', '24/7 Available'),
-                ('Campus Health & Wellness Center', 'Medical', 'Resident medical officers, 24/7 emergency nursing station, and dedicated pharmacy.', 'Opposite Boys Hostel A', '24/7 Emergency / OPD 8am-8pm'),
-                ('Innovation & Debate Lounge', 'Recreation', 'Modular workspaces, acoustic study pods, and project collaboration desks.', 'Central Student Hub', '8:00 AM - 11:00 PM'),
-            ]
-
-            for name, cat, desc, loc, timings in facilities_data:
-                Facility.objects.get_or_create(
-                    name=name,
-                    defaults={'category': cat, 'description': desc, 'location': loc, 'timings': timings, 'is_active': True}
-                )
-            self.stdout.write("  [OK] Campus Facilities created.")
-
-            # 10. Mess Menus (All 7 days, 4 meals)
-            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            meals_template = [
-                ('BREAKFAST', '7:30 AM - 9:30 AM', {
-                    'Monday': 'Idli, Medu Vada, Coconut Chutney, Sambar, Boiled Eggs / Banana, Tea / Coffee',
-                    'Tuesday': 'Aloo Paratha with Curd & Pickle, Fresh Sprouts Salad, Boiled Eggs, Tea / Coffee',
-                    'Wednesday': 'Poha with Sev, Veg Upma, Coconut Chutney, Omelette / Bananas, Tea / Coffee',
-                    'Thursday': 'Puri Bhaji, Fresh Cut Papaya, Boiled Eggs, Tea / Milk / Coffee',
-                    'Friday': 'Masala Dosa, Sambar, Tomato Chutney, Boiled Eggs, Tea / Coffee',
-                    'Saturday': 'Chole Bhature / Methi Thepla, Mint Chutney, Fresh Fruits, Tea / Coffee',
-                    'Sunday': 'Paneer Stuffed Kulcha, Egg Bhurji, Watermelon slices, Special Filter Coffee'
-                }),
-                ('LUNCH', '12:30 PM - 2:30 PM', {
-                    'Monday': 'Steamed Basmati Rice, Dal Tadka, Seasonal Mix Veg, Roti, Cucumber Raita, Gulab Jamun',
-                    'Tuesday': 'Jeera Rice, Rajma Masala, Aloo Gobi, Phulka, Curd, Roasted Papad',
-                    'Wednesday': 'Peas Pulao, Paneer Butter Masala (Veg) / Chicken Curry (Non-Veg), Dal Fry, Chapati, Salad',
-                    'Thursday': 'Lemon Rice, South Indian Sambar, Cabbage Poriyal, Rasam, Appalam, Curd',
-                    'Friday': 'Veg Biryani / Egg Biryani, Mirchi Ka Salan, Onion Mint Raita, Phulka, Moong Dal Halwa',
-                    'Saturday': 'Steamed Rice, Chana Dal Palak, Bhindi Do Pyaza, Tawa Roti, Boondi Raita',
-                    'Sunday': 'Special Hyderabadi Dum Biryani (Chicken / Paneer), Veg Korma, Mirch Salan, Ice Cream'
-                }),
-                ('SNACKS', '5:00 PM - 6:00 PM', {
-                    'Monday': 'Samosa with Mint & Tamarind Chutney, Ginger Masala Tea',
-                    'Tuesday': 'Veg Cutlet, Tomato Sauce, Hot Coffee / Green Tea',
-                    'Wednesday': 'Onion & Spinach Pakoda, Masala Chai',
-                    'Thursday': 'Pav Bhaji with Buttered Pav, Cutting Chai',
-                    'Friday': 'Bhel Puri, Sweet Corn Chaat, Lemon Iced Tea / Chai',
-                    'Saturday': 'Bun Maska & Biscuits, Filter Coffee',
-                    'Sunday': 'Paneer Bread Roll, Adrak Chai'
-                }),
-                ('DINNER', '7:30 PM - 9:30 PM', {
-                    'Monday': 'Phulka, Dal Makhani, Kadai Paneer, Steamed Rice, Green Salad, Kheer',
-                    'Tuesday': 'Chapati, Yellow Moong Dal, Dum Aloo Kashmiri, Rice, Fresh Curd, Jalebi',
-                    'Wednesday': 'Butter Roti, Dal Tadka, Malai Kofta (Veg) / Egg Curry, Steamed Rice, Salad',
-                    'Thursday': 'Roti, Panchratna Dal, Baingan Bharta, Steamed Rice, Papad, Fruit Custard',
-                    'Friday': 'Chapati, Dal Palak, Paneer Tikka Masala, Jeera Rice, Rasgulla',
-                    'Saturday': 'Roti, Dal Kolhapuri, Mix Veg Korma, Steamed Rice, Tomato Rasam',
-                    'Sunday': 'Tandoori Roti, Dal Makhani, Shahi Paneer (Veg) / Butter Chicken, Pulao, Rasmalai'
-                }),
-            ]
-
-            for m_type, timings, day_map in meals_template:
-                for day in days:
-                    MessMenu.objects.get_or_create(
-                        day_of_week=day,
-                        meal_type=m_type,
-                        defaults={'items': day_map[day], 'timings': timings, 'is_special': (day == 'Sunday')}
-                    )
-            self.stdout.write("  [OK] Full 7-day Mess Menus verified.")
-
-            # 11. Laundry Services
-            laundry_catalog = [
-                ('Regular Wash & Fold', Decimal('25.00'), 'Per Kg', 'Everyday clothes washed, tumble dried, and neatly folded. 24h turnaround.'),
-                ('Steam Press & Ironing', Decimal('15.00'), 'Per Item', 'Wrinkle-free professional steam pressing on hangers or folded.'),
-                ('Premium Dry Cleaning', Decimal('90.00'), 'Per Item', 'Gentle solvent cleaning for suits, blazers, delicate silks, and formal wear.'),
-                ('Bed Linen & Heavy Laundry', Decimal('60.00'), 'Per Set', 'Double bedsheets, duvets, blankets, curtains, and heavy towels.'),
-            ]
-
-            for s_name, rate, unit, desc in laundry_catalog:
-                LaundryService.objects.get_or_create(
-                    service_name=s_name,
-                    defaults={'rate_per_unit': rate, 'unit_type': unit, 'description': desc, 'is_active': True}
-                )
-            self.stdout.write("  [OK] Laundry services catalog verified.")
-
-            # 12. Sample Laundry & Maintenance Requests
-            demo_stu1 = Student.objects.get(student_id='STU2026_STUDENT_RAHUL')
-            demo_stu2 = Student.objects.get(student_id='STU2026_STUDENT_PRIYA')
-            lnd_srv = LaundryService.objects.first()
-
-            LaundryRequest.objects.get_or_create(
-                booking_id='LND-2026-0001',
-                defaults={
-                    'student': demo_stu1,
-                    'hostel': demo_stu1.current_hostel,
-                    'service': lnd_srv,
-                    'item_count_or_weight': Decimal('3.5'),
-                    'pickup_slot': timezone.now() - timedelta(days=1),
-                    'delivery_slot': timezone.now() + timedelta(days=1),
-                    'status': 'PROCESSING',
-                    'special_instructions': 'Separate colored shirts from whites please.',
-                    'total_cost': Decimal('87.50'),
-                }
-            )
-
-            MaintenanceRequest.objects.get_or_create(
-                complaint_id='MNT-2026-0001',
-                defaults={
-                    'student': demo_stu1,
-                    'hostel': demo_stu1.current_hostel,
-                    'room': demo_stu1.current_room,
-                    'category': 'ELECTRICAL',
-                    'title': 'Study desk reading lamp socket loose',
-                    'description': 'The power socket adjacent to bed 1 has an intermittent contact issue.',
-                    'priority': 'MEDIUM',
-                    'assigned_staff': 'Ramesh Kumar (Hostel Electrician)',
-                    'status': 'IN_PROGRESS',
-                    'resolution_remarks': 'Inspected wiring. Replacement switch plate ordered.',
-                }
-            )
-
-            MaintenanceRequest.objects.get_or_create(
-                complaint_id='MNT-2026-0002',
-                defaults={
-                    'student': demo_stu2,
-                    'hostel': demo_stu2.current_hostel,
-                    'room': demo_stu2.current_room,
-                    'category': 'AC',
-                    'title': 'AC temperature sensor calibration',
-                    'description': 'AC cooling turns off too quickly even at 24C.',
-                    'priority': 'HIGH',
-                    'assigned_staff': 'CoolAir Service Tech Team',
-                    'status': 'REPORTED',
-                }
-            )
-
-            # 13. Hostel Announcements
+            # 9. Hostel Announcements
             Announcement.objects.get_or_create(
                 title='Hostel Room Exchange Window Open for Academic Year 2026-27',
                 defaults={
@@ -680,6 +530,10 @@ class Command(BaseCommand):
                     'is_active': True,
                 }
             )
-            self.stdout.write("  [OK] Initial Announcements and Service Requests created.")
+            self.stdout.write("  [OK] Initial Announcements created.")
+
+            # 10. Seed Central University Day Scholar Students
+            from django.core.management import call_command
+            call_command('seed_central_students')
 
         self.stdout.write(self.style.SUCCESS("\nHostelX database seeded successfully! Ready for use."))

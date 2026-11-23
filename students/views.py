@@ -8,10 +8,8 @@ from rooms.models import RoomPricing, Bed, RoomCategory
 from hostels.models import Hostel, Announcement
 from exchanges.models import ExchangeRequest, ExchangeProposal, ProposalParticipant, PolicyRule
 from exchanges.services import create_direct_proposal, validate_student_eligibility
-from mess.models import MessRegistration, MessMenu
-from laundry.models import LaundryRequest
-from maintenance.models import MaintenanceRequest
 from finance.models import StudentAccount
+from notifications.models import Notification
 
 @login_required
 def student_dashboard(request):
@@ -47,21 +45,18 @@ def student_dashboard(request):
         'new_hostel', 'new_room', 'new_bed'
     ).order_by('-transfer_date')
 
-    # Mess Details & Today's Menu
-    mess_reg = MessRegistration.objects.filter(student=student, is_active=True).first()
-    today_day = timezone.now().strftime('%A')
-    today_menus = MessMenu.objects.filter(day_of_week=today_day)
-
-    # Recent Laundry & Maintenance
-    recent_laundry = LaundryRequest.objects.filter(student=student).order_by('-created_at')[:3]
-    recent_maintenance = MaintenanceRequest.objects.filter(student=student).order_by('-created_at')[:3]
-
     # Announcements
     announcements = Announcement.objects.filter(
         is_active=True
     ).filter(
         target_hostel__in=[student.current_hostel, None]
     )[:5]
+
+    # Warden / Admin Messages (notifications of type ANNOUNCEMENT sent to this student)
+    warden_messages = Notification.objects.filter(
+        recipient=user,
+        notification_type='ANNOUNCEMENT'
+    ).order_by('-created_at')[:8]
 
     # Eligibility Check
     is_eligible, eligibility_msg = validate_student_eligibility(student)
@@ -73,12 +68,8 @@ def student_dashboard(request):
         'active_requests': active_requests,
         'participations': participations,
         'transfer_records': transfer_records,
-        'mess_reg': mess_reg,
-        'today_day': today_day,
-        'today_menus': today_menus,
-        'recent_laundry': recent_laundry,
-        'recent_maintenance': recent_maintenance,
         'announcements': announcements,
+        'warden_messages': warden_messages,
         'is_eligible': is_eligible,
         'eligibility_msg': eligibility_msg,
     }
@@ -174,9 +165,13 @@ def propose_direct_exchange(request):
         current_bed__isnull=False
     ).exclude(id=student.id).select_related('current_hostel', 'current_room', 'current_bed', 'current_room__category')[:100]
 
+    target_param = request.GET.get('target')
+    selected_target_id = int(target_param) if target_param and target_param.isdigit() else None
+
     context = {
         'student': student,
         'candidates': candidate_students,
         'policy': policy,
+        'selected_target_id': selected_target_id,
     }
     return render(request, 'exchanges/propose_direct.html', context)

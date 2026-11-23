@@ -10,22 +10,286 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <!-- Custom Styling -->
-  <link href="{% static 'css/custom.css' %}" rel="stylesheet">
+  <!-- Custom Styling with Cache Busting -->
+  <link href="{% static 'css/custom.css' %}?v=20261124_v10" rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Essential Palette & Layout Styles (Guaranteed No-Cache Application) -->
+  <style>
+    :root {
+      --ums-orange: #f37023;
+      --ums-orange-dark: #ea580c;
+      --ums-orange-gradient: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+      --ums-blue-pill: #0284c7;
+      --ums-blue-hover: #0369a1;
+      --ums-bg-light: #f6f8fa;
+      --ums-text-dark: #1e293b;
+      --ums-border: #e2e8f0;
+    }
+
+    body {
+      background-color: var(--ums-bg-light) !important;
+      color: var(--ums-text-dark) !important;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
+    }
+
+    /* Top Announcement Strip */
+    .ums-top-announcement {
+      background-color: #ffedd5 !important;
+      color: #9a3412 !important;
+      border-bottom: 1px solid #fed7aa !important;
+      font-size: 0.82rem !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      text-align: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+    }
+    .ums-top-announcement a {
+      color: #c2410c !important;
+      text-decoration: underline !important;
+    }
+
+    /* Clean Crisp White Navbar */
+    .navbar-custom {
+      background-color: #ffffff !important;
+      border-bottom: 1px solid var(--ums-border) !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+      padding: 0.45rem 1.25rem !important;
+    }
+
+    .navbar-nav .nav-link {
+      color: #334155 !important;
+      font-weight: 600 !important;
+      font-size: 0.88rem !important;
+      padding: 0.45rem 0.85rem !important;
+      transition: color 0.15s ease !important;
+    }
+    .navbar-nav .nav-link:hover {
+      color: var(--ums-orange) !important;
+    }
+
+    /* Main Container & Left Orange Sidebar */
+    .app-wrapper {
+      display: flex !important;
+      min-height: calc(100vh - 95px) !important;
+      width: 100% !important;
+    }
+
+    .app-sidebar-ums {
+      width: 82px !important;
+      min-width: 82px !important;
+      background: var(--ums-orange) !important;
+      background: var(--ums-orange-gradient) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      padding: 12px 0 20px !important;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06) !important;
+      z-index: 100 !important;
+      flex-shrink: 0 !important;
+    }
+
+    .sidebar-collapse-btn {
+      background: rgba(255, 255, 255, 0.2) !important;
+      border: none !important;
+      color: #ffffff !important;
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 6px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-bottom: 12px !important;
+      cursor: pointer !important;
+    }
+
+    .sidebar-ums-item {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 72px !important;
+      height: 60px !important;
+      padding: 4px 2px !important;
+      margin-bottom: 6px !important;
+      border-radius: 8px !important;
+      color: #ffffff !important;
+      text-decoration: none !important;
+      font-size: 0.68rem !important;
+      font-weight: 600 !important;
+      line-height: 1.15 !important;
+      text-align: center !important;
+      transition: all 0.15s ease !important;
+    }
+    .sidebar-ums-item i {
+      font-size: 1.35rem !important;
+      margin-bottom: 2px !important;
+      color: #ffffff !important;
+    }
+    .sidebar-ums-item:hover, .sidebar-ums-item.active {
+      background: rgba(0, 0, 0, 0.18) !important;
+      color: #ffffff !important;
+    }
+
+    .sidebar-support-widget {
+      margin-top: auto !important;
+      width: 44px !important;
+      height: 44px !important;
+      border-radius: 50% !important;
+      background: #0284c7 !important;
+      color: #ffffff !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 1.3rem !important;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4) !important;
+      cursor: pointer !important;
+    }
+
+    .app-content {
+      flex-grow: 1 !important;
+      padding: 1.5rem 2rem !important;
+      overflow-y: auto !important;
+      background-color: var(--ums-bg-light) !important;
+    }
+
+    /* Important Links Pills */
+    .ums-important-links-wrapper {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+      margin-bottom: 24px !important;
+    }
+
+    .ums-pill-orange {
+      background: var(--ums-orange) !important;
+      color: #ffffff !important;
+      border-radius: 20px !important;
+      padding: 6px 18px !important;
+      font-weight: 600 !important;
+      font-size: 0.84rem !important;
+      border: none !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      box-shadow: 0 2px 6px rgba(243, 112, 35, 0.25) !important;
+      transition: all 0.15s ease !important;
+    }
+    .ums-pill-orange:hover {
+      background: var(--ums-orange-dark) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .ums-pill-blue {
+      background: var(--ums-blue-pill) !important;
+      color: #ffffff !important;
+      border-radius: 20px !important;
+      padding: 6px 18px !important;
+      font-weight: 600 !important;
+      font-size: 0.84rem !important;
+      border: none !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+      transition: all 0.15s ease !important;
+    }
+    .ums-pill-blue:hover {
+      background: var(--ums-blue-hover) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px) !important;
+    }
+
+    /* Card Bookmark Tabs & Items */
+    .ums-ribbon-tab {
+      background: var(--ums-orange) !important;
+      color: #ffffff !important;
+      border-radius: 6px 6px 0 0 !important;
+      padding: 8px 14px !important;
+      font-weight: 700 !important;
+      font-size: 0.86rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      width: 100% !important;
+    }
+
+    .happening-card-item {
+      border-left: 3.5px solid #16a34a !important;
+      padding-left: 12px !important;
+      margin-bottom: 14px !important;
+    }
+    .happening-card-item:last-child {
+      margin-bottom: 0 !important;
+    }
+    .happening-card-item h6 {
+      font-size: 0.88rem !important;
+      font-weight: 700 !important;
+      color: #1e293b !important;
+      margin-bottom: 2px !important;
+      line-height: 1.3 !important;
+    }
+    .happening-card-item p {
+      font-size: 0.78rem !important;
+      color: #64748b !important;
+      margin-bottom: 0 !important;
+      line-height: 1.35 !important;
+    }
+
+    .message-card-item {
+      padding-bottom: 12px !important;
+      margin-bottom: 12px !important;
+      border-bottom: 1px dashed #e2e8f0 !important;
+    }
+    .message-card-item:last-child {
+      border-bottom: none !important;
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    .message-card-item h6 {
+      font-size: 0.86rem !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      margin-bottom: 3px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+    }
+    .message-card-item p {
+      font-size: 0.78rem !important;
+      color: #475569 !important;
+      margin-bottom: 0 !important;
+      line-height: 1.35 !important;
+    }
+  </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+  <!-- Top Announcement Strip (Hostel Management Notice) -->
+  <div class="ums-top-announcement">
+    {% if user.is_warden or user.is_chief_warden %}
+      <span>📢 Hostel Warden Console: Exchange & Approval window active. 👉 <a href="{% url 'warden_approvals_queue' %}">Click here to review pending exchange approvals.</a></span>
+    {% elif user.is_student %}
+      <span>📢 Central University Notice: Hostel Room Exchange portal for Session 2026-27 is active. 👉 <a href="{% url 'available_exchange_requests' %}">Click here to browse exchange pool & apply.</a></span>
+    {% else %}
+      <span>📢 Central University Notice: Hostel Room Exchange portal for Session 2026-27 is active.</span>
+    {% endif %}
+  </div>
+
+  <!-- Top Navigation Bar (UMS Authentic Style) -->
+  <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top">
     <div class="container-fluid px-3 px-lg-4">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard_redirect' %}">
-        <i class="bi bi-buildings-fill text-info fs-4"></i>
-        <span class="navbar-brand-title">Hostel<span class="text-info">X</span></span>
-        <span class="brand-badge d-none d-sm-inline-block">University Portal</span>
+      <a class="navbar-brand d-flex align-items-center me-3" href="{% url 'dashboard_redirect' %}">
+        <img src="{% static 'images/ums_full_logo.png' %}" alt="UMS University Management System" style="height: 44px; object-fit: contain;">
       </a>
 
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
@@ -35,65 +299,66 @@
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
           {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link text-white-50 hover-text-white" href="{% url 'dashboard_redirect' %}">
-                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            <!-- Hostel & Living Dropdown -->
+            <li class="nav-item dropdown">
+              <a class="nav-link fw-bold small dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="color: var(--ums-orange) !important;">
+                <i class="bi bi-door-open-fill me-1"></i> {% if user.is_warden or user.is_chief_warden %}Hostel Operations{% else %}Hostel & Living{% endif %}
               </a>
+              <ul class="dropdown-menu shadow-sm border-0 small">
+                {% if user.is_warden or user.is_chief_warden %}
+                  <li><a class="dropdown-item fw-bold" style="color: var(--ums-orange);" href="{% url 'warden_approvals_queue' %}"><i class="bi bi-patch-check-fill me-2"></i> Approval Queue</a></li>
+                  <li><a class="dropdown-item" href="{% url 'available_exchange_requests' %}"><i class="bi bi-compass me-2 text-primary"></i> Open Exchange Requests</a></li>
+                  <li><a class="dropdown-item" href="{% url 'hostel_occupancy_view' %}"><i class="bi bi-grid-3x3-gap-fill me-2 text-success"></i> Bed Occupancy Grid</a></li>
+                  <li><a class="dropdown-item" href="{% url 'hostel_residents_view' %}"><i class="bi bi-people-fill me-2 text-info"></i> Hostel Residents Directory</a></li>
+                  <li><a class="dropdown-item" href="{% url 'admin_send_message' %}"><i class="bi bi-megaphone-fill me-2 text-warning"></i> Send Notice to Students</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{% url 'warden_dashboard' %}"><i class="bi bi-speedometer2 me-2 text-secondary"></i> Warden Dashboard</a></li>
+                {% else %}
+                  <li><a class="dropdown-item fw-bold" style="color: var(--ums-orange);" href="{% url 'available_exchange_requests' %}"><i class="bi bi-compass me-2"></i> Available Exchange Requests</a></li>
+                  <li><a class="dropdown-item" href="{% url 'create_exchange_request' %}"><i class="bi bi-arrow-left-right me-2 text-primary"></i> Request Room Exchange</a></li>
+                  <li><a class="dropdown-item" href="{% url 'propose_direct_exchange' %}"><i class="bi bi-arrow-repeat me-2 text-primary"></i> Propose Direct Swap</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{% url 'student_dashboard' %}"><i class="bi bi-house-door me-2 text-secondary"></i> My Hostel Dashboard</a></li>
+                {% endif %}
+              </ul>
             </li>
 
-            <!-- Direct Room Booking in Navbar -->
-            <li class="nav-item">
-              <a class="nav-link text-white fw-bold d-flex align-items-center gap-1 bg-success bg-opacity-25 rounded px-3 py-1 my-1 my-lg-0 me-lg-2 border border-success" href="{% url 'room_booking_catalog' %}">
-                <i class="bi bi-door-open-fill text-success fs-6"></i>
-                <span>Book a Room</span>
-                <span class="badge bg-success ms-1" style="font-size:0.65rem;">Direct</span>
+            <!-- Student Services Dropdown -->
+            <li class="nav-item dropdown">
+              <a class="nav-link text-dark fw-medium small dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                Student Services
               </a>
+              <ul class="dropdown-menu shadow-sm border-0 small">
+                <li><a class="dropdown-item" href="{% url 'my_financial_account' %}"><i class="bi bi-wallet2 me-2 text-primary"></i> Fee & Financial Ledger</a></li>
+                <li><a class="dropdown-item" href="{% url 'notifications_index' %}"><i class="bi bi-megaphone me-2 text-warning"></i> Announcements</a></li>
+              </ul>
             </li>
 
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'room_search' %}">
-                <i class="bi bi-search me-1"></i> Bed Explorer
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'mess_index' %}">
-                <i class="bi bi-egg-fried me-1"></i> Mess
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'laundry_index' %}">
-                <i class="bi bi-droplet-half me-1"></i> Laundry
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'maintenance_index' %}">
-                <i class="bi bi-tools me-1"></i> Maintenance
-              </a>
-            </li>
-
-            <!-- Admin Quick Access in Top Nav -->
             {% if user.is_admin_user %}
-              <li class="nav-item">
-                <a class="nav-link text-warning fw-bold d-flex align-items-center gap-1 ms-lg-2" href="{% url 'admin_overview' %}">
-                  <i class="bi bi-shield-lock-fill"></i> Admin Control Hub
-                </a>
-              </li>
+            <!-- Admin Dropdown -->
+            <li class="nav-item dropdown">
+              <a class="nav-link text-dark fw-medium small dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                Admin
+              </a>
+              <ul class="dropdown-menu shadow-sm border-0 small">
+                <li><a class="dropdown-item fw-bold text-primary" href="{% url 'admin_overview' %}"><i class="bi bi-shield-lock-fill me-2"></i> Admin Control Hub</a></li>
+                <li><a class="dropdown-item" href="{% url 'admin_students_manager' %}"><i class="bi bi-people-fill me-2"></i> Central Student Database</a></li>
+                <li><a class="dropdown-item" href="{% url 'admin_rooms_manager' %}"><i class="bi bi-door-open me-2"></i> Manage Rooms & Beds</a></li>
+              </ul>
+            </li>
             {% endif %}
+
+            <!-- Search Icon -->
+            <li class="nav-item ms-lg-2">
+              <a href="{% url 'notifications_index' %}" class="btn btn-sm btn-light border rounded-circle text-muted p-2" title="Notifications" style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-search"></i>
+              </a>
+            </li>
           {% else %}
-            <!-- Public links for visitors on login / register page -->
+            <!-- Public links for visitors -->
             <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'room_search' %}">
-                <i class="bi bi-door-open me-1"></i> Explore Hostels & Beds
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'facilities_index' %}">
-                <i class="bi bi-hospital me-1"></i> Campus Facilities
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white-50" href="{% url 'room_booking_catalog' %}">
-                <i class="bi bi-bookmark-check me-1"></i> Room Booking Catalog
+              <a class="nav-link text-dark fw-medium" href="{% url 'login' %}">
+                <i class="bi bi-door-open me-1"></i> Hostel Portal
               </a>
             </li>
           {% endif %}
@@ -103,24 +368,24 @@
           {% if user.is_authenticated %}
             <!-- Notifications Dropdown -->
             <li class="nav-item dropdown">
-              <a class="nav-link text-white position-relative p-2" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-bell fs-5"></i>
+              <a class="nav-link text-dark position-relative p-2" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-bell fs-5 text-secondary"></i>
                 {% if unread_notifications_count > 0 %}
                   <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
                     {{ unread_notifications_count }}
                   </span>
                 {% endif %}
               </a>
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="width: 320px; max-height: 400px; overflow-y: auto;" aria-labelledby="notifDropdown">
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="width: 320px; max-height: 400px; overflow-y: auto;">
                 <li class="p-2 border-bottom d-flex justify-content-between align-items-center bg-light">
                   <span class="fw-bold small">Notifications ({{ unread_notifications_count }} unread)</span>
-                  <a href="{% url 'notifications_index' %}" class="small text-decoration-none">View All</a>
+                  <a href="{% url 'notifications_index' %}" class="small text-decoration-none" style="color: var(--ums-orange);">View All</a>
                 </li>
                 {% if recent_notifications %}
                   {% for notif in recent_notifications %}
                     <li class="p-2 border-bottom hover-bg-light">
                       <a href="{% if notif.link %}{{ notif.link }}{% else %}{% url 'notifications_index' %}{% endif %}" class="text-decoration-none text-dark d-block">
-                        <div class="fw-semibold small text-primary">{{ notif.title }}</div>
+                        <div class="fw-semibold small" style="color: var(--ums-orange);">{{ notif.title }}</div>
                         <div class="text-muted" style="font-size: 0.78rem;">{{ notif.message|truncatechars:70 }}</div>
                         <div class="text-secondary" style="font-size: 0.7rem;">{{ notif.created_at|timesince }} ago</div>
                       </a>
@@ -132,28 +397,34 @@
               </ul>
             </li>
 
-            <!-- User Profile Dropdown -->
+            <!-- User Profile Block (Matching LPU UMS screenshot) -->
             <li class="nav-item dropdown">
-              <a class="nav-link text-white d-flex align-items-center gap-2 p-1 pe-2 rounded hover-bg-navy" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                <div class="rounded-circle bg-info text-dark fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.85rem;">
-                  {{ user.first_name|default:user.username|make_list|first|upper }}
+              <a class="nav-link text-dark d-flex align-items-center gap-2 p-1 pe-2 rounded text-decoration-none" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                <div class="d-none d-md-block text-end" style="line-height: 1.2;">
+                  <span class="fw-bold text-dark d-block" style="font-size: 0.88rem;">{{ user.get_full_name|default:user.username }}</span>
+                  <span class="text-muted" style="font-size: 0.72rem;">
+                    Reg: {{ user.student_profile.registration_number|default:user.username }}<br>
+                    <span class="text-truncate d-inline-block" style="max-width: 220px;">{{ user.student_profile.course|default:user.get_role_display }}</span>
+                  </span>
                 </div>
-                <div class="d-none d-md-block text-start" style="line-height: 1.2;">
-                  <span class="fw-semibold small d-block">{{ user.get_full_name|default:user.username }}</span>
-                  <span class="badge bg-secondary" style="font-size: 0.65rem;">{{ user.get_role_display }}</span>
+                <div class="position-relative">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 38px; height: 38px; background: var(--ums-orange); font-size: 0.95rem;">
+                    {{ user.first_name|default:user.username|make_list|first|upper }}
+                  </div>
+                  <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 10px; height: 10px;"></span>
                 </div>
-                <i class="bi bi-chevron-down small"></i>
+                <i class="bi bi-chevron-down small text-muted"></i>
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userDropdown">
-                <li><h6 class="dropdown-header">Signed in as <b>{{ user.username }}</b></h6></li>
+                <li><h6 class="dropdown-header">Signed in as <b>{{ user.username }}</b> ({{ user.get_role_display }})</h6></li>
                 <li><a class="dropdown-item" href="{% url 'user_profile' %}"><i class="bi bi-person me-2"></i> My Profile</a></li>
                 {% if user.is_student %}
-                  <li><a class="dropdown-item" href="{% url 'room_booking_catalog' %}"><i class="bi bi-door-open-fill text-success me-2"></i> Book a Room</a></li>
-                  <li><a class="dropdown-item" href="{% url 'my_bookings' %}"><i class="bi bi-receipt me-2"></i> My Bookings</a></li>
+                  <li><a class="dropdown-item fw-bold" style="color: var(--ums-orange);" href="{% url 'create_exchange_request' %}"><i class="bi bi-arrow-left-right me-2"></i> Request Exchange</a></li>
                   <li><a class="dropdown-item" href="{% url 'my_financial_account' %}"><i class="bi bi-wallet2 me-2"></i> Financial Account</a></li>
                 {% endif %}
                 {% if user.is_admin_user %}
                   <li><a class="dropdown-item fw-bold text-primary" href="{% url 'admin_overview' %}"><i class="bi bi-shield-lock me-2"></i> Admin Control Hub</a></li>
+                  <li><a class="dropdown-item" href="{% url 'admin_students_manager' %}"><i class="bi bi-people me-2"></i> Central Student Database</a></li>
                 {% endif %}
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -169,13 +440,8 @@
           {% else %}
             <!-- Unauthenticated Visitor Links -->
             <li class="nav-item">
-              <a class="btn btn-outline-light btn-sm px-3" href="{% url 'login' %}">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="btn btn-info btn-sm px-3 fw-bold text-dark" href="{% url 'register' %}">
-                <i class="bi bi-person-plus-fill me-1"></i> Register
+              <a class="btn text-white btn-sm px-3 fw-bold shadow-sm" style="background: var(--ums-orange);" href="{% url 'login' %}">
+                <i class="bi bi-box-arrow-in-right me-1"></i> University Login (UMS)
               </a>
             </li>
           {% endif %}
@@ -184,98 +450,77 @@
     </div>
   </nav>
 
-  <!-- App Main Layout with Sidebar -->
+  <!-- App Main Layout with LPU UMS Sidebar -->
   <div class="app-wrapper">
     {% if user.is_authenticated %}
-      <!-- Sidebar -->
-      <aside class="app-sidebar shadow-sm">
-        <div class="sidebar-heading">Navigation</div>
+      <!-- LPU UMS Vertical Orange Sidebar -->
+      <aside class="app-sidebar-ums">
+        <button class="sidebar-collapse-btn" title="Toggle Sidebar"><i class="bi bi-chevron-left"></i></button>
+
+        <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'student_dashboard' or request.resolver_match.url_name == 'dashboard_redirect' %}active{% endif %}" href="{% url 'dashboard_redirect' %}" title="Dashboard">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
 
         {% if user.is_student %}
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" href="{% url 'student_dashboard' %}">
-            <i class="bi bi-grid-1x2"></i> My Dashboard
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'available_exchange_requests' %}active{% endif %}" href="{% url 'available_exchange_requests' %}" title="Available Exchange Requests">
+            <i class="bi bi-compass"></i>
+            <span>Requests</span>
           </a>
 
-          <!-- Prominent Direct Room Booking in Student Sidebar -->
-          <a class="nav-link-custom {% if 'rooms/book' in request.path %}active{% endif %} text-success fw-bold" href="{% url 'room_booking_catalog' %}">
-            <i class="bi bi-door-open-fill text-success"></i> Book a Hostel Room
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'create_exchange_request' or request.resolver_match.url_name == 'propose_direct_exchange' %}active{% endif %}" href="{% url 'create_exchange_request' %}" title="Request Bed Exchange">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Exchanges</span>
           </a>
 
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}" href="{% url 'my_bookings' %}">
-            <i class="bi bi-receipt"></i> My Bookings
+          <a class="sidebar-ums-item {% if 'finance' in request.path %}active{% endif %}" href="{% url 'my_financial_account' %}" title="Fee Ledger">
+            <i class="bi bi-wallet2"></i>
+            <span>Fees</span>
+          </a>
+        {% elif user.is_warden or user.is_chief_warden %}
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'warden_approvals_queue' or request.resolver_match.url_name == 'approval_detail' %}active{% endif %}" href="{% url 'warden_approvals_queue' %}" title="Approval Queue">
+            <i class="bi bi-patch-check-fill"></i>
+            <span>Approvals</span>
           </a>
 
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'create_exchange_request' %}active{% endif %}" href="{% url 'create_exchange_request' %}">
-            <i class="bi bi-arrow-left-right"></i> Request Exchange
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'available_exchange_requests' %}active{% endif %}" href="{% url 'available_exchange_requests' %}" title="Exchange Requests Pool">
+            <i class="bi bi-compass"></i>
+            <span>Requests</span>
           </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'propose_direct_exchange' %}active{% endif %}" href="{% url 'propose_direct_exchange' %}">
-            <i class="bi bi-person-lines-fill"></i> Direct Swap
+
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'hostel_occupancy_view' %}active{% endif %}" href="{% url 'hostel_occupancy_view' %}" title="Bed Occupancy Grid">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            <span>Occupancy</span>
           </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'my_financial_account' %}active{% endif %}" href="{% url 'my_financial_account' %}">
-            <i class="bi bi-credit-card-2-front"></i> Financial Ledger
+
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'hostel_residents_view' %}active{% endif %}" href="{% url 'hostel_residents_view' %}" title="Hostel Residents">
+            <i class="bi bi-people-fill"></i>
+            <span>Residents</span>
           </a>
-        {% elif user.is_warden %}
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'warden_dashboard' %}active{% endif %}" href="{% url 'warden_dashboard' %}">
-            <i class="bi bi-shield-check"></i> Warden Dashboard
-          </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'hostel_occupancy' %}active{% endif %}" href="{% url 'warden_dashboard' %}#occupancy">
-            <i class="bi bi-layout-wtf"></i> Hostel Occupancy
-          </a>
-        {% elif user.is_chief_warden %}
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'chief_warden_dashboard' %}active{% endif %}" href="{% url 'chief_warden_dashboard' %}">
-            <i class="bi bi-diagram-3"></i> Chief Warden Console
-          </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'find_matches' %}active{% endif %}" href="{% url 'find_matches' %}">
-            <i class="bi bi-cpu"></i> Match Engine (Graph)
+
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'admin_send_message' %}active{% endif %}" href="{% url 'admin_send_message' %}" title="Broadcast Message">
+            <i class="bi bi-megaphone-fill"></i>
+            <span>Notices</span>
           </a>
         {% elif user.is_admin_user %}
-          <!-- Expanded Admin Control Navigation -->
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'admin_overview' %}active{% endif %} fw-bold text-primary" href="{% url 'admin_overview' %}">
-            <i class="bi bi-shield-lock-fill text-primary"></i> Admin Control Hub
+          <a class="sidebar-ums-item {% if 'admin-panel' in request.path %}active{% endif %}" href="{% url 'admin_overview' %}" title="Admin Hub">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Admin</span>
           </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'admin_rooms_manager' %}active{% endif %}" href="{% url 'admin_rooms_manager' %}">
-            <i class="bi bi-door-open"></i> Manage Rooms & Beds
+          <a class="sidebar-ums-item" href="{% url 'admin_students_manager' %}" title="Central Database">
+            <i class="bi bi-people-fill"></i>
+            <span>Database</span>
           </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'admin_bookings_manager' %}active{% endif %}" href="{% url 'admin_bookings_manager' %}">
-            <i class="bi bi-journal-check"></i> Direct Bookings Manager
-          </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'admin_students_manager' %}active{% endif %}" href="{% url 'admin_students_manager' %}">
-            <i class="bi bi-people"></i> Students Controller
-          </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
-            <i class="bi bi-sliders"></i> Policies & Pricing
-          </a>
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'find_matches' %}active{% endif %}" href="{% url 'find_matches' %}">
-            <i class="bi bi-cpu"></i> Graph Match Engine
-          </a>
-          <a class="nav-link-custom" href="/admin/" target="_blank">
-            <i class="bi bi-database-gear"></i> Django Admin
-          </a>
-        {% elif user.is_dean %}
-          <a class="nav-link-custom {% if request.resolver_match.url_name == 'dean_dashboard' %}active{% endif %}" href="{% url 'dean_dashboard' %}">
-            <i class="bi bi-graph-up-arrow"></i> Dean Analytics
+          <a class="sidebar-ums-item {% if request.resolver_match.url_name == 'available_exchange_requests' %}active{% endif %}" href="{% url 'available_exchange_requests' %}" title="Available Exchange Requests">
+            <i class="bi bi-compass"></i>
+            <span>Requests</span>
           </a>
         {% endif %}
 
-        <div class="sidebar-heading mt-3">Hostel Services</div>
-        <a class="nav-link-custom {% if 'rooms/search' in request.path %}active{% endif %}" href="{% url 'room_search' %}">
-          <i class="bi bi-search"></i> Bed Explorer
-        </a>
-        <a class="nav-link-custom {% if 'mess' in request.path %}active{% endif %}" href="{% url 'mess_index' %}">
-          <i class="bi bi-cup-hot"></i> Mess Menu & Dietary
-        </a>
-        <a class="nav-link-custom {% if 'laundry' in request.path %}active{% endif %}" href="{% url 'laundry_index' %}">
-          <i class="bi bi-basket"></i> Laundry Service
-        </a>
-        <a class="nav-link-custom {% if 'maintenance' in request.path %}active{% endif %}" href="{% url 'maintenance_index' %}">
-          <i class="bi bi-wrench-adjustable"></i> Maintenance
-        </a>
-        <a class="nav-link-custom {% if 'facilities' in request.path %}active{% endif %}" href="{% url 'facilities_index' %}">
-          <i class="bi bi-hospital"></i> Campus Facilities
-        </a>
-        <a class="nav-link-custom {% if 'reports' in request.path %}active{% endif %}" href="{% url 'reports_index' %}">
-          <i class="bi bi-file-earmark-bar-graph"></i> Reports & Audits
-        </a>
+        <!-- Floating Chat / Help Widget -->
+        <div class="sidebar-support-widget" title="Student Helpdesk Active" onclick="alert('LPU UMS 24x7 Helpdesk is active.');">
+          <i class="bi bi-chat-dots-fill"></i>
+        </div>
       </aside>
     {% endif %}
 

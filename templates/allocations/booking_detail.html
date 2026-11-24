@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Room Booking – {{ bed.full_code }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      
+      <div class="card card-custom p-4 shadow">
+        <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
+          <div>
+            <h4 class="fw-bold text-navy mb-0"><i class="bi bi-bookmark-check-fill text-success me-2"></i> Direct Room Booking Confirmation</h4>
+            <p class="text-muted small mb-0">Review your selected room details and finalize allotment</p>
+          </div>
+          <span class="badge bg-success p-2">Ready for Allotment</span>
+        </div>
+
+        <!-- Room Particulars Card -->
+        <div class="card bg-light p-3 border mb-4">
+          <h6 class="fw-bold text-navy border-bottom pb-2 mb-3">Hostel & Bed Information</h6>
+          <div class="row g-3 small">
+            <div class="col-md-6">
+              <span class="text-muted">Hostel:</span>
+              <div class="fw-bold text-primary fs-6">{{ bed.room.hostel.name }} ({{ bed.room.hostel.code }})</div>
+              <small class="text-muted">Gender: {{ bed.room.hostel.gender }} Hostel • {{ bed.room.hostel.address }}</small>
+            </div>
+            <div class="col-md-6">
+              <span class="text-muted">Allotted Bed:</span>
+              <div class="fw-bold text-success fs-6">{{ bed.full_code }}</div>
+              <small class="text-muted">Room: {{ bed.room.room_number }} • Floor {{ bed.room.floor }} • Identifier: {{ bed.bed_identifier }}</small>
+            </div>
+            <div class="col-md-6">
+              <span class="text-muted">Room Category:</span>
+              <div class="fw-semibold">{{ bed.room.category.name }}</div>
+              <small class="text-muted">Total Capacity: {{ bed.room.category.capacity }} Beds • {% if bed.room.category.is_ac %}Air Conditioned{% else %}Non-AC{% endif %}</small>
+            </div>
+            <div class="col-md-6">
+              <span class="text-muted">Academic Session:</span>
+              <div class="fw-semibold">2026-2027</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Details Card -->
+        <div class="card bg-light p-3 border mb-4">
+          <h6 class="fw-bold text-navy border-bottom pb-2 mb-3">Student Details</h6>
+          <div class="row g-2 small">
+            <div class="col-md-6"><b>Full Name:</b> {{ student.full_name }}</div>
+            <div class="col-md-6"><b>Student ID:</b> {{ student.student_id }}</div>
+            <div class="col-md-6"><b>Course & Year:</b> {{ student.course }} ({{ student.academic_year }})</div>
+            <div class="col-md-6"><b>Gender:</b> {{ student.gender }}</div>
+          </div>
+        </div>
+
+        <!-- Financial Breakdown Card -->
+        <div class="card bg-light p-3 border mb-4">
+          <h6 class="fw-bold text-navy border-bottom pb-2 mb-3">Financial Settlement Breakdown</h6>
+          <div class="row g-2 small align-items-center">
+            <div class="col-sm-6 text-muted">Annual Room Fee:</div>
+            <div class="col-sm-6 text-end fw-bold">₹{{ annual_fee|floatformat:0 }}</div>
+
+            {% if advance_used > 0 %}
+              <div class="col-sm-6 text-muted">Advance Account Balance Applied:</div>
+              <div class="col-sm-6 text-end fw-bold text-success">-₹{{ advance_used|floatformat:0 }}</div>
+            {% endif %}
+
+            <div class="col-12"><hr class="my-1"></div>
+
+            <div class="col-sm-6 fw-bold text-navy fs-6">Net Amount Payable:</div>
+            <div class="col-sm-6 text-end fw-bold text-primary fs-5">₹{{ net_payable|floatformat:0 }}</div>
+          </div>
+        </div>
+
+        <!-- Notice -->
+        <div class="alert alert-light border small text-muted mb-4">
+          <i class="bi bi-shield-lock-fill text-primary me-1"></i>
+          <b>Payment Mode:</b> Simulated Test Transaction. No actual money will be deducted from your bank account.
+        </div>
+
+        <!-- Form Confirmation -->
+        <form method="post" action="{% url 'room_booking_confirm' bed.id %}">
+          {% csrf_token %}
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{% url 'room_booking_catalog' %}" class="btn btn-outline-secondary">
+              &larr; Back to Bed Catalog
+            </a>
+            <button type="submit" class="btn btn-success px-4 py-2 fw-bold shadow-sm">
+              <i class="bi bi-check2-circle me-1"></i> Confirm Booking & Pay ₹{{ net_payable|floatformat:0 }}
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

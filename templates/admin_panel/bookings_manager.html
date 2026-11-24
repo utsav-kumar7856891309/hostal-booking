@@ -85,7 +85,9 @@
                 <td class="text-muted">{{ b.booking_date|date:"M d, Y H:i" }}</td>
                 <td><span class="badge bg-success">{{ b.status }}</span></td>
                 <td class="text-end">
-                  <span class="badge bg-light text-dark border">#{{ b.booking_id }}</span>
+                  <a href="{% url 'booking_receipt' booking_id=b.id %}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                    <i class="bi bi-file-earmark-text"></i> Certificate
+                  </a>
                 </td>
               </tr>
             {% empty %}

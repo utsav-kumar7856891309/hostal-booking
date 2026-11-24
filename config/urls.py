@@ -25,6 +25,10 @@ from finance.views import (
     download_transfer_letter_pdf, view_transfer_letter_html
 )
 from notifications.views import notifications_index, mark_read, admin_send_message
+from allocations.views import (
+    room_booking_catalog, room_booking_detail, room_booking_confirm,
+    booking_receipt, my_bookings_list
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -46,6 +50,13 @@ urlpatterns = [
     path('admin-panel/bookings/manual-allot/', admin_manual_allot, name='admin_manual_allot'),
     path('admin-panel/students/', admin_students_manager, name='admin_students_manager'),
     path('admin-panel/students/<int:student_id>/update-status/', admin_update_student_status, name='admin_update_student_status'),
+
+    # Direct Room Booking Facility
+    path('rooms/book/', room_booking_catalog, name='room_booking_catalog'),
+    path('rooms/book/<int:bed_id>/', room_booking_detail, name='room_booking_detail'),
+    path('rooms/book/<int:bed_id>/confirm/', room_booking_confirm, name='room_booking_confirm'),
+    path('bookings/<int:booking_id>/', booking_receipt, name='booking_receipt'),
+    path('my-bookings/', my_bookings_list, name='my_bookings'),
 
     # Dashboards
     path('dashboard/student/', student_dashboard, name='student_dashboard'),

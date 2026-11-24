@@ -10,7 +10,6 @@ from hostels.models import Hostel
 from students.models import Student
 from allocations.models import BedAllocation, RoomBooking
 from finance.models import StudentAccount, FinancialTransaction, FinancialLedgerEntry
-from mess.models import MessRegistration
 from audit.models import AuditEntry
 from notifications.models import Notification
 
@@ -193,12 +192,13 @@ def room_booking_confirm(request, bed_id):
                 remarks='Direct Online Room Booking Allotment'
             )
 
-            # 3. Update Student current location
+            # 3. Update Student current location & residency
             student.current_hostel = bed.room.hostel
             student.current_room = bed.room
             student.current_bed = bed
+            student.student_type = 'HOSTEL'
             student.fee_status = 'PAID'
-            student.save(update_fields=['current_hostel', 'current_room', 'current_bed', 'fee_status'])
+            student.save(update_fields=['current_hostel', 'current_room', 'current_bed', 'student_type', 'fee_status'])
 
             # 4. Update financial account & create transaction
             if advance_used > 0:
@@ -241,20 +241,7 @@ def room_booking_confirm(request, bed_id):
                 transaction=txn
             )
 
-            # 6. Update Mess registration
-            mess_reg = MessRegistration.objects.filter(student=student, is_active=True).first()
-            if mess_reg:
-                mess_reg.hostel = bed.room.hostel
-                mess_reg.save(update_fields=['hostel'])
-            else:
-                MessRegistration.objects.create(
-                    student=student,
-                    hostel=bed.room.hostel,
-                    dietary_preference='VEG',
-                    is_active=True
-                )
-
-            # 7. Audit log & Notification
+            # 6. Audit log & Notification
             AuditEntry.objects.create(
                 actor=user,
                 action='DIRECT_ROOM_BOOKED',

@@ -16,9 +16,9 @@
           <div class="mb-3">
             <label class="form-label fw-bold small text-navy">Select Exchange Partner</label>
             <select name="target_student_id" class="form-select" required size="8">
-              <option value="" disabled>-- Select a fellow student --</option>
+              <option value="" {% if not selected_target_id %}selected{% endif %} disabled>-- Select a fellow student --</option>
               {% for cand in candidates %}
-                <option value="{{ cand.id }}">
+                <option value="{{ cand.id }}" {% if cand.id == selected_target_id %}selected{% endif %}>
                   {{ cand.full_name }} ({{ cand.student_id }}) — Current: {{ cand.current_bed.full_code }} [{{ cand.current_room.category.name }}] ({{ cand.current_hostel.name }})
                 </option>
               {% empty %}
@@ -47,3 +47,4 @@
   </div>
 </div>
 {% endblock %}
+

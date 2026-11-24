@@ -25,14 +25,26 @@ class Student(models.Model):
         ('INACTIVE', 'Inactive'),
     ]
 
+    STUDENT_TYPE_CHOICES = [
+        ('HOSTEL', 'Hostel Resident'),
+        ('DAY_SCHOLAR', 'Day Scholar'),
+    ]
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     student_id = models.CharField(max_length=30, unique=True, help_text="e.g. STU2026001")
-    registration_number = models.CharField(max_length=30, unique=True, help_text="e.g. REG2026001")
+    registration_number = models.CharField(max_length=30, unique=True, help_text="e.g. REG2026001 or 12313714")
     full_name = models.CharField(max_length=150)
     email = models.EmailField()
     mobile_number = models.CharField(max_length=20)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_photograph = models.ImageField(upload_to='students/', blank=True, null=True)
+
+    student_type = models.CharField(
+        max_length=20,
+        choices=STUDENT_TYPE_CHOICES,
+        default='HOSTEL',
+        help_text="Designation in Central University Database (Hostel Resident or Day Scholar)"
+    )
 
     course = models.CharField(max_length=100, help_text="e.g. B.Tech Computer Science")
     department = models.CharField(max_length=100)
@@ -52,8 +64,16 @@ class Student(models.Model):
         ordering = ['student_id']
 
     def __str__(self):
-        bed_str = self.current_bed.full_code if self.current_bed else "No Bed"
-        return f"{self.full_name} ({self.student_id}) [{bed_str}]"
+        bed_str = self.current_bed.full_code if self.current_bed else "Day Scholar"
+        return f"{self.full_name} ({self.registration_number}) [{self.get_student_type_display()}]"
+
+    @property
+    def is_day_scholar(self):
+        return self.student_type == 'DAY_SCHOLAR' or self.current_bed is None
+
+    @property
+    def is_hostel_resident(self):
+        return self.student_type == 'HOSTEL' and self.current_bed is not None
 
     @property
     def is_eligible_for_exchange(self):

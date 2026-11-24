@@ -5,9 +5,7 @@ from django.db.models import Count, Sum, Q
 
 from hostels.models import Hostel
 from rooms.models import RoomCategory, Bed
-from exchanges.models import ExchangeProposal
-from mess.models import ServiceFeedback
-from maintenance.models import MaintenanceRequest
+from exchanges.models import ExchangeProposal, ExchangeRequest
 from finance.models import FinancialTransaction, TransferRecord
 from audit.models import AuditEntry
 
@@ -34,15 +32,16 @@ def dean_dashboard(request):
     cycle_labels = [f"{cd['cycle_length']}-Party Cycle" for cd in cycle_distribution]
     cycle_counts = [cd['count'] for cd in cycle_distribution]
 
-    # 3. Maintenance Requests by Category
-    maint_by_cat = MaintenanceRequest.objects.values('category').annotate(count=Count('id')).order_by('-count')
-    maint_labels = [dict(MaintenanceRequest.CATEGORY_CHOICES).get(m['category'], m['category']) for m in maint_by_cat]
-    maint_counts = [m['count'] for m in maint_by_cat]
+    # 3. Exchange Proposal Status Breakdown
+    status_choices_dict = dict(ExchangeProposal.STATUS_CHOICES)
+    status_distribution = ExchangeProposal.objects.values('status').annotate(count=Count('id')).order_by('-count')
+    status_labels = [status_choices_dict.get(s['status'], s['status']) for s in status_distribution]
+    status_counts = [s['count'] for s in status_distribution]
 
-    # 4. Mess Ratings Distribution
-    mess_ratings = ServiceFeedback.objects.filter(service_type='MESS').values('rating').annotate(count=Count('id')).order_by('rating')
-    rating_labels = [f"{r['rating']} Stars" for r in mess_ratings]
-    rating_counts = [r['count'] for r in mess_ratings]
+    # 4. Exchange Requests Distribution by Preferred Hostel
+    req_by_hostel = Hostel.objects.annotate(req_count=Count('preferred_in_requests')).filter(req_count__gt=0).order_by('-req_count')
+    demand_labels = [h.name for h in req_by_hostel]
+    demand_counts = [h.req_count for h in req_by_hostel]
 
     # 5. Financial aggregates
     total_processed_transfers = TransferRecord.objects.count()
@@ -58,26 +57,11 @@ def dean_dashboard(request):
         'hostel_vacant': hostel_vacant,
         'cycle_labels': cycle_labels,
         'cycle_counts': cycle_counts,
-        'maint_labels': maint_labels,
-        'maint_counts': maint_counts,
-        'rating_labels': rating_labels,
-        'rating_counts': rating_counts,
+        'status_labels': status_labels,
+        'status_counts': status_counts,
+        'demand_labels': demand_labels,
+        'demand_counts': demand_counts,
         'total_processed_transfers': total_processed_transfers,
         'total_processing_fee_collected': total_processing_fee_collected,
     }
     return render(request, 'dashboards/dean_dashboard.html', context)
-
-@login_required
-def reports_index(request):
-    transfer_records = TransferRecord.objects.select_related(
-        'student', 'previous_hostel', 'previous_room', 'previous_bed',
-        'new_hostel', 'new_room', 'new_bed'
-    ).order_by('-transfer_date')[:50]
-
-    recent_audits = AuditEntry.objects.select_related('actor').order_by('-timestamp')[:50]
-
-    context = {
-        'transfer_records': transfer_records,
-        'recent_audits': recent_audits,
-    }
-    return render(request, 'reports/index.html', context)

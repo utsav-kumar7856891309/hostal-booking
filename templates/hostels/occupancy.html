@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Real-Time Bed Occupancy Grid – Hostel Warden Console{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-md-3">
+
+  <!-- Breadcrumb & Top Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_redirect' %}" class="text-decoration-none" style="color: var(--ums-orange);">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'warden_dashboard' %}" class="text-decoration-none" style="color: var(--ums-orange);">Hostel</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Bed Occupancy Grid</li>
+      </ol>
+    </nav>
+    <div class="d-flex gap-2">
+      <a href="{% url 'warden_approvals_queue' %}" class="btn btn-sm text-white fw-bold shadow-sm" style="background: var(--ums-orange); border-radius: 6px;">
+        <i class="bi bi-patch-check-fill me-1"></i> Approval Queue
+      </a>
+      <a href="{% url 'hostel_residents_view' %}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-people-fill me-1"></i> Residents Directory
+      </a>
+    </div>
+  </div>
+
+  <!-- Header Banner -->
+  <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid var(--ums-orange) !important; border-radius: 10px;">
+    <div class="card-body py-3 px-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background: var(--ums-orange); font-size: 1.4rem;">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+          </div>
+          <div>
+            <h4 class="fw-bold text-dark mb-0" style="font-size: 1.25rem;">Real-Time Bed Occupancy Floor Grid</h4>
+            <p class="text-muted small mb-0">
+              Hostel: <b class="text-dark">{{ hostel.name }} ({{ hostel.code }})</b> &bull; Gender: {{ hostel.gender }} &bull; Total Capacity: {{ total_beds }} Beds
+            </p>
+          </div>
+        </div>
+
+        {% if user.is_chief_warden or user.is_admin_user %}
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted fw-bold">Select Hostel:</span>
+            <div class="btn-group" role="group">
+              {% for h in all_hostels %}
+                <a href="?hostel={{ h.code }}" class="btn btn-sm {% if h.code == hostel.code %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                  {{ h.code }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Capacity Metrics Strip -->
+  <div class="row g-2 mb-4">
+    <div class="col-6 col-md-3 col-xl">
+      <div class="stat-card">
+        <div class="stat-lbl">Total Beds</div>
+        <div class="stat-val text-dark">{{ total_beds }}</div>
+        <small class="text-muted">{{ hostel.total_floors }} Floors</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="stat-card">
+        <div class="stat-lbl">Occupied Beds</div>
+        <div class="stat-val text-primary">{{ occupied_beds }}</div>
+        <small class="text-muted">Active Residents</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="stat-card">
+        <div class="stat-lbl">Vacant Beds</div>
+        <div class="stat-val text-success">{{ vacant_beds }}</div>
+        <small class="text-muted">Available for Allotment</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="stat-card">
+        <div class="stat-lbl">Blocked / Maintenance</div>
+        <div class="stat-val text-danger">{{ maintenance_beds|add:blocked_beds }}</div>
+        <small class="text-muted">Unavailable</small>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl">
+      <div class="stat-card">
+        <div class="stat-lbl">Occupancy Rate</div>
+        <div class="stat-val text-warning">{{ occupancy_pct }}%</div>
+        <div class="progress mt-1" style="height: 5px;">
+          <div class="progress-bar bg-warning" role="progressbar" style="width: {{ occupancy_pct }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Legend Toolbar -->
+  <div class="card card-custom mb-4">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        
+        <!-- Filters -->
+        <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+          {% if hostel.code %}<input type="hidden" name="hostel" value="{{ hostel.code }}">{% endif %}
+          
+          <div class="d-flex align-items-center gap-1">
+            <label class="small text-muted fw-bold">Floor:</label>
+            <select name="floor" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 120px;">
+              <option value="">All Floors</option>
+              {% for f in "1234"|make_list %}
+                <option value="{{ f }}" {% if selected_floor|stringformat:"s" == f %}selected{% endif %}>Floor {{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="d-flex align-items-center gap-1">
+            <label class="small text-muted fw-bold">Category:</label>
+            <select name="category" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 180px;">
+              <option value="">All Categories</option>
+              {% for c in categories %}
+                <option value="{{ c.id }}" {% if selected_category == c.id %}selected{% endif %}>{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          {% if selected_floor or selected_category %}
+            <a href="?hostel={{ hostel.code }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-x-circle me-1"></i> Reset
+            </a>
+          {% endif %}
+        </form>
+
+        <!-- Status Legend -->
+        <div class="d-flex align-items-center gap-3 small">
+          <span class="d-flex align-items-center gap-1">
+            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #3b82f6;"></span> Occupied
+          </span>
+          <span class="d-flex align-items-center gap-1">
+            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #10b981;"></span> Vacant
+          </span>
+          <span class="d-flex align-items-center gap-1">
+            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #f59e0b;"></span> Blocked
+          </span>
+          <span class="d-flex align-items-center gap-1">
+            <span class="d-inline-block rounded" style="width: 12px; height: 12px; background: #ef4444;"></span> Maintenance
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Floor-by-Floor Rooms & Beds Layout -->
+  <div class="card card-custom">
+    <div class="card-body p-3 p-md-4">
+      {% for floor_no, room_list in floors.items %}
+        <div class="mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold text-dark mb-0">
+              <i class="bi bi-layers-fill text-primary me-2"></i> Floor {{ floor_no }}
+            </h5>
+            <span class="badge bg-light text-dark border">{{ room_list|length }} Room{{ room_list|length|pluralize }}</span>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3">
+            {% for r in room_list %}
+              <div class="border rounded p-2 bg-light text-center" style="min-width: 140px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div class="fw-bold text-dark small">Room {{ r.room_number }}</div>
+                <div class="text-muted text-truncate" style="font-size: 0.68rem;" title="{{ r.category.name }}">
+                  {{ r.category.name }}
+                </div>
+                
+                <div class="d-flex justify-content-center gap-1 mt-2">
+                  {% for b in r.beds.all %}
+                    <div class="bed-tile {% if b.status == 'OCCUPIED' %}bed-occupied{% elif b.status == 'VACANT' %}bed-vacant{% elif b.status == 'BLOCKED' %}bed-blocked{% else %}bed-maintenance{% endif %}"
+                         title="{{ b.full_code }} &bull; {{ b.get_status_display }}{% if b.current_occupant %} &bull; {{ b.current_occupant.full_name }} ({{ b.current_occupant.registration_number }}){% endif %}">
+                      {{ b.bed_identifier }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% empty %}
+        <div class="p-5 text-center text-muted">
+          <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+          No rooms found matching your filter criteria.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

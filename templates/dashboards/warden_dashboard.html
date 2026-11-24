@@ -26,6 +26,27 @@
     {% endif %}
   </div>
 
+  <!-- Warden Quick Action Navigation Strip -->
+  <div class="mb-4">
+    <div class="ums-important-links-wrapper">
+      <a href="{% url 'warden_approvals_queue' %}" class="ums-pill-orange">
+        <i class="bi bi-patch-check-fill"></i> Approval Queue {% if pending_approvals.count > 0 %}<span class="badge bg-danger ms-1">{{ pending_approvals.count }}</span>{% endif %}
+      </a>
+      <a href="{% url 'available_exchange_requests' %}" class="ums-pill-orange">
+        <i class="bi bi-compass"></i> Open Request Pool
+      </a>
+      <a href="{% url 'hostel_occupancy_view' %}" class="ums-pill-blue">
+        <i class="bi bi-grid-3x3-gap-fill"></i> Bed Occupancy Grid
+      </a>
+      <a href="{% url 'hostel_residents_view' %}" class="ums-pill-blue">
+        <i class="bi bi-people-fill"></i> Residents Directory
+      </a>
+      <a href="{% url 'admin_send_message' %}" class="ums-pill-blue">
+        <i class="bi bi-megaphone-fill"></i> Broadcast Notice
+      </a>
+    </div>
+  </div>
+
   <!-- Key Metrics Cards -->
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-lg-2">
@@ -76,11 +97,16 @@
 
   <!-- Pending Approvals Section -->
   <div class="card card-custom mb-4 border-primary">
-    <div class="card-header-custom bg-light">
-      <h5 class="card-title-custom text-primary">
+    <div class="card-header-custom bg-light d-flex justify-content-between align-items-center">
+      <h5 class="card-title-custom text-primary mb-0">
         <i class="bi bi-shield-exclamation text-danger"></i> Pending Exchange Approvals for {{ hostel.name }}
       </h5>
-      <span class="badge bg-danger">{{ pending_approvals.count }} Pending</span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-danger">{{ pending_approvals.count }} Pending</span>
+        <a href="{% url 'warden_approvals_queue' %}" class="btn btn-sm btn-outline-danger py-0 px-2">
+          Open Approval Queue &rarr;
+        </a>
+      </div>
     </div>
     <div class="card-body p-0">
       {% if pending_approvals %}
@@ -132,14 +158,19 @@
 
   <!-- Interactive Bed Occupancy Floor Grid Visualizer -->
   <div class="card card-custom mb-4" id="occupancy">
-    <div class="card-header-custom">
-      <h5 class="card-title-custom"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Real-Time Bed Occupancy Floor Grid</h5>
-      <div class="d-flex align-items-center gap-3 small">
-        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#3b82f6;"></span> Occupied</span>
-        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#10b981;"></span> Vacant</span>
-        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#f59e0b;"></span> Blocked</span>
-        <span><span class="d-inline-block rounded" style="width:12px;height:12px;background:#ef4444;"></span> Maintenance</span>
+    <div class="card-header-custom d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="card-title-custom mb-0"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Real-Time Bed Occupancy Floor Grid</h5>
+        <div class="d-flex align-items-center gap-2 small">
+          <span><span class="d-inline-block rounded" style="width:10px;height:10px;background:#3b82f6;"></span> Occupied</span>
+          <span><span class="d-inline-block rounded" style="width:10px;height:10px;background:#10b981;"></span> Vacant</span>
+          <span><span class="d-inline-block rounded" style="width:10px;height:10px;background:#f59e0b;"></span> Blocked</span>
+          <span><span class="d-inline-block rounded" style="width:10px;height:10px;background:#ef4444;"></span> Maint.</span>
+        </div>
       </div>
+      <a href="{% url 'hostel_occupancy_view' %}" class="btn btn-sm btn-outline-primary py-0 px-2">
+        Full Bed Console &rarr;
+      </a>
     </div>
     <div class="card-body">
       {% for floor_no, room_list in floors.items %}
@@ -170,9 +201,14 @@
 
   <!-- Resident Students Directory -->
   <div class="card card-custom">
-    <div class="card-header-custom">
-      <h5 class="card-title-custom"><i class="bi bi-people-fill text-primary"></i> Resident Students Directory</h5>
-      <span class="badge bg-secondary">{{ students.count }} Resident Allotments</span>
+    <div class="card-header-custom d-flex justify-content-between align-items-center">
+      <h5 class="card-title-custom mb-0"><i class="bi bi-people-fill text-primary"></i> Resident Students Directory</h5>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-secondary">{{ students.count }} Residents</span>
+        <a href="{% url 'hostel_residents_view' %}" class="btn btn-sm btn-outline-primary py-0 px-2">
+          Full Residents Directory &rarr;
+        </a>
+      </div>
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -216,3 +252,4 @@
 
 </div>
 {% endblock %}
+

@@ -21,9 +21,6 @@ from approvals.services import warden_approve_proposal, warden_reject_proposal
 from finance.models import StudentAccount, FinancialTransaction, TransferRecord
 from finance.services import calculate_participant_financials, process_simulated_payment
 from exchanges.execution import execute_exchange_atomic, AtomicExchangeExecutionError
-from mess.models import MessRegistration, MessMenu
-from laundry.models import LaundryService, LaundryRequest
-from maintenance.models import MaintenanceRequest
 from audit.models import AuditEntry
 
 User = get_user_model()
@@ -109,7 +106,6 @@ class HostelXBaseSetup:
         )
         BedAllocation.objects.get_or_create(student=stu, bed=b, academic_year='2026-2027', defaults={'is_active': True})
         StudentAccount.objects.get_or_create(student=stu, defaults={'balance': Decimal('0.00')})
-        MessRegistration.objects.get_or_create(student=stu, defaults={'hostel': hostel, 'is_active': True})
         return stu
 
 class HostelXCoreTests(TestCase, HostelXBaseSetup):
@@ -395,21 +391,10 @@ class HostelXTransactionTests(TransactionTestCase, HostelXBaseSetup):
         self.assertEqual(s1.current_bed.room.room_number, '152')
         self.assertEqual(s2.current_bed.room.room_number, '151')
 
-    # 26, 27, 28, 29, 30. Mess update, Laundry, Maintenance, Audit log
+    # 25. Atomic exchange execution and audit preservation
     def test_25_services_and_audit_preservation(self):
         s1 = self.create_student_with_bed('srv_s1', 'Srv Stu 1', 'Male', self.h_boys_a, self.cat_single, '161', 'B1')
         s2 = self.create_student_with_bed('srv_s2', 'Srv Stu 2', 'Male', self.h_boys_b, self.cat_single, '161', 'B1')
-
-        # Create past maintenance ticket for s1
-        mnt = MaintenanceRequest.objects.create(
-            complaint_id='MNT-TEST-01',
-            student=s1,
-            hostel=self.h_boys_a,
-            room=s1.current_room,
-            category='ELECTRICAL',
-            title='Desk lamp',
-            description='Bulb flicker'
-        )
 
         prop, _ = create_direct_proposal(s1, s2)
         student_accept_proposal(prop, s2)
@@ -424,13 +409,8 @@ class HostelXTransactionTests(TransactionTestCase, HostelXBaseSetup):
         s1.refresh_from_db()
         self.assertEqual(s1.current_hostel_id, self.h_boys_b.id)
 
-        # S1's mess registration updated to Boys Hostel B
-        mess_reg = MessRegistration.objects.get(student=s1, is_active=True)
-        self.assertEqual(mess_reg.hostel_id, self.h_boys_b.id)
-
-        # Historical maintenance ticket still preserved
-        mnt.refresh_from_db()
-        self.assertEqual(mnt.hostel_id, self.h_boys_a.id)
+        # Transfer record generated
+        self.assertTrue(TransferRecord.objects.filter(proposal=prop, student=s1).exists())
 
         # Audit log exists
         self.assertTrue(AuditEntry.objects.filter(entity_type='ExchangeProposal', entity_id=str(prop.id)).exists())

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Send Message to Students – Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-md-4" style="max-width: 860px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-bold mb-0" style="color: var(--ums-orange);">
+        <i class="bi bi-envelope-fill me-2"></i> Send Message to Students
+      </h4>
+      <p class="text-muted small mb-0">Messages appear in each student's "My Messages" inbox on their dashboard.</p>
+    </div>
+    <a href="{% url 'admin_students_manager' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Students
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Recipient -->
+        <div class="mb-4">
+          <label class="form-label fw-bold">Recipient</label>
+          <select name="recipient_id" class="form-select" required>
+            <option value="all">📢 Broadcast – All Students ({{ students|length }})</option>
+            {% for s in students %}
+              <option value="{{ s.pk }}">
+                {{ s.get_full_name|default:s.username }}
+                {% if s.student_profile %}
+                  ({{ s.student_profile.registration_number }})
+                {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Select a specific student or broadcast to everyone.</div>
+        </div>
+
+        <!-- Title -->
+        <div class="mb-4">
+          <label class="form-label fw-bold">Message Title</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. Quiet Hours Reminder, Room Inspection Notice" required maxlength="200">
+        </div>
+
+        <!-- Body -->
+        <div class="mb-4">
+          <label class="form-label fw-bold">Message Body</label>
+          <textarea name="body" class="form-control" rows="5" placeholder="Type the full message here..." required></textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn text-white fw-bold px-4" style="background: var(--ums-orange); border-radius: 8px;">
+            <i class="bi bi-send-fill me-1"></i> Send Message
+          </button>
+          <a href="{% url 'admin_students_manager' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

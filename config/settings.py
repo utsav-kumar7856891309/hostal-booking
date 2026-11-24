@@ -3,17 +3,24 @@ Django settings for HostelX project.
 Smart Hostel Room Exchange and Hostel Management Platform
 """
 
+import os
+import urllib.parse as urlparse
 from pathlib import Path
 from decimal import Decimal
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-hostelx-smart-exchange-management-platform-key-2026'
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-hostelx-smart-exchange-management-platform-key-2026')
 
-ALLOWED_HOSTS = ['*']
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+
+allowed_hosts_str = os.getenv('ALLOWED_HOSTS', '*')
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_str.split(',') if h.strip()] if allowed_hosts_str != '*' else ['*']
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -36,10 +43,6 @@ INSTALLED_APPS = [
     'exchanges.apps.ExchangesConfig',
     'approvals.apps.ApprovalsConfig',
     'finance.apps.FinanceConfig',
-    'facilities.apps.FacilitiesConfig',
-    'mess.apps.MessConfig',
-    'laundry.apps.LaundryConfig',
-    'maintenance.apps.MaintenanceConfig',
     'notifications.apps.NotificationsConfig',
     'reports.apps.ReportsConfig',
     'audit.apps.AuditConfig',
@@ -75,17 +78,53 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database: SQLite ONLY as requested
-# Using timeout options to handle SQLite concurrency safely
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 30,  # 30s busy timeout for concurrent access handling
+# Database Configuration: PostgreSQL (Default) with Environment / SQLite fallback
+DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'django.db.backends.postgresql')
+
+if DATABASE_URL:
+    url = urlparse.urlparse(DATABASE_URL)
+    engine = 'django.db.backends.postgresql'
+    if url.scheme in ('postgres', 'postgresql', 'pgsql'):
+        engine = 'django.db.backends.postgresql'
+    elif url.scheme == 'sqlite':
+        engine = 'django.db.backends.sqlite3'
+
+    DATABASES = {
+        'default': {
+            'ENGINE': engine,
+            'NAME': url.path.lstrip('/') if engine != 'django.db.backends.sqlite3' else BASE_DIR / url.path.lstrip('/'),
+            'USER': url.username or '',
+            'PASSWORD': url.password or '',
+            'HOST': url.hostname or '',
+            'PORT': str(url.port or 5432) if engine != 'django.db.backends.sqlite3' else '',
         }
     }
-}
+elif DATABASE_ENGINE == 'django.db.backends.sqlite3' or os.getenv('USE_SQLITE', 'False').lower() in ('true', '1', 't'):
+    sqlite_name = os.getenv('DATABASE_NAME', 'db.sqlite3')
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / sqlite_name if not Path(sqlite_name).is_absolute() else Path(sqlite_name),
+            'OPTIONS': {
+                'timeout': 30,  # 30s busy timeout for concurrent access handling
+            }
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DATABASE_NAME', 'hostel_db'),
+            'USER': os.getenv('DATABASE_USER', 'postgres'),
+            'PASSWORD': os.getenv('DATABASE_PASSWORD', ''),
+            'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+            'PORT': os.getenv('DATABASE_PORT', '5432'),
+            'OPTIONS': {
+                'connect_timeout': int(os.getenv('DATABASE_CONNECT_TIMEOUT', '10')),
+            }
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

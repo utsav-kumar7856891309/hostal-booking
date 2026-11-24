@@ -3,7 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.db.models import Q
 
+from hostels.models import Hostel
+from rooms.models import RoomCategory
 from exchanges.models import ExchangeProposal, ProposalParticipant, ExchangeRequest, PolicyRule
 from exchanges.services import (
     student_accept_proposal, student_decline_proposal,
@@ -150,3 +153,76 @@ def find_matches(request):
         'policy': policy,
     }
     return render(request, 'exchanges/find_matches.html', context)
+
+@login_required
+def available_exchange_requests(request):
+    """
+    Live Open Request Pool:
+    Allows students and staff to view active room exchange requests across eligible hostels,
+    filter by hostel / category, and propose direct 1-to-1 swaps with matching peers.
+    """
+    user = request.user
+    student = getattr(user, 'student_profile', None)
+
+    # Base queryset: only ACTIVE exchange requests
+    requests_qs = ExchangeRequest.objects.filter(status='ACTIVE').select_related(
+        'student', 'student__user', 'current_bed', 'current_bed__room',
+        'current_bed__room__hostel', 'current_bed__room__category'
+    ).prefetch_related('preferred_hostels', 'preferred_categories').order_by('-created_at')
+
+    # Gender block rule (P04 policy): male students can only swap with male students, female with female
+    if student and student.gender:
+        requests_qs = requests_qs.filter(student__gender=student.gender)
+
+    # Filter parameters
+    hostel_id = request.GET.get('hostel')
+    category_id = request.GET.get('category')
+    search_q = request.GET.get('q', '').strip()
+    match_my_bed = request.GET.get('match_my_bed') == '1'
+
+    if hostel_id and hostel_id.isdigit():
+        requests_qs = requests_qs.filter(current_bed__room__hostel_id=int(hostel_id))
+
+    if category_id and category_id.isdigit():
+        requests_qs = requests_qs.filter(current_bed__room__category_id=int(category_id))
+
+    if search_q:
+        requests_qs = requests_qs.filter(
+            Q(student__registration_number__icontains=search_q) |
+            Q(student__full_name__icontains=search_q) |
+            Q(reason__icontains=search_q) |
+            Q(current_bed__bed_identifier__icontains=search_q) |
+            Q(current_bed__room__room_number__icontains=search_q) |
+            Q(current_bed__room__hostel__name__icontains=search_q)
+        )
+
+    # Filter: requester's preferences accept student's current bed
+    if match_my_bed and student and student.current_bed and student.current_room:
+        my_hostel = student.current_hostel
+        my_category = student.current_room.category
+        requests_qs = requests_qs.filter(
+            Q(preferred_hostels=my_hostel) | Q(preferred_hostels__isnull=True)
+        ).filter(
+            Q(preferred_categories=my_category) | Q(preferred_categories__isnull=True)
+        ).distinct()
+
+    # Hostels & Categories for dropdown filters
+    hostels = Hostel.objects.all()
+    if student and student.gender:
+        hostels = hostels.filter(gender=student.gender)
+    categories = RoomCategory.objects.all()
+
+    total_count = requests_qs.count()
+
+    context = {
+        'student': student,
+        'exchange_requests': requests_qs,
+        'hostels': hostels,
+        'categories': categories,
+        'selected_hostel': int(hostel_id) if hostel_id and hostel_id.isdigit() else None,
+        'selected_category': int(category_id) if category_id and category_id.isdigit() else None,
+        'search_q': search_q,
+        'match_my_bed': match_my_bed,
+        'total_count': total_count,
+    }
+    return render(request, 'exchanges/available_requests.html', context)

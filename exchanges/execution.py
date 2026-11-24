@@ -9,7 +9,6 @@ from allocations.models import BedAllocation
 from rooms.models import Bed
 from finance.models import TransferRecord
 from finance.services import calculate_participant_financials
-from mess.models import MessRegistration
 from audit.models import AuditEntry
 from notifications.models import Notification
 
@@ -184,21 +183,7 @@ def execute_exchange_atomic(proposal, executed_by_user=None):
                 )
                 transfer_records.append(tr)
 
-                # Step 8: Update mess registration association without deleting past history
-                # Update current active mess registration to the new hostel
-                mess_reg = MessRegistration.objects.filter(student=student, is_active=True).first()
-                if mess_reg:
-                    mess_reg.hostel = new_hostel
-                    mess_reg.save(update_fields=['hostel'])
-                else:
-                    MessRegistration.objects.create(
-                        student=student,
-                        hostel=new_hostel,
-                        dietary_preference='VEG',
-                        is_active=True
-                    )
-
-                # Step 9: Complete any active ExchangeRequest for this student
+                # Step 8: Complete any active ExchangeRequest for this student
                 ExchangeRequest.objects.filter(
                     student=student,
                     status__in=['ACTIVE', 'MATCHED']

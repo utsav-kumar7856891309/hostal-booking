@@ -11,8 +11,6 @@ from students.models import Student
 from allocations.models import BedAllocation, RoomBooking
 from exchanges.models import PolicyRule, ExchangeProposal
 from finance.models import StudentAccount, FinancialTransaction, FinancialLedgerEntry
-from maintenance.models import MaintenanceRequest
-from laundry.models import LaundryRequest
 from audit.models import AuditEntry
 from notifications.models import Notification
 
@@ -248,7 +246,8 @@ def admin_manual_allot(request):
             student.current_hostel = bed.room.hostel
             student.current_room = bed.room
             student.current_bed = bed
-            student.save(update_fields=['current_hostel', 'current_room', 'current_bed'])
+            student.student_type = 'HOSTEL'
+            student.save(update_fields=['current_hostel', 'current_room', 'current_bed', 'student_type'])
 
             bkg_code = f"ADM-ALLOT-{now.strftime('%Y%m%d%H%M')}-{student.id}"
             RoomBooking.objects.create(
@@ -284,13 +283,14 @@ def admin_manual_allot(request):
 @login_required
 def admin_students_manager(request):
     """
-    Searchable student directory with instant status toggles.
+    Searchable Central University Student Database directory with status toggles.
     """
     if not verify_admin(request.user):
         messages.error(request, "Admin access required.")
         return redirect('dashboard_redirect')
 
     search_q = request.GET.get('q', '').strip()
+    student_type_filter = request.GET.get('type', '').strip()
     students = Student.objects.select_related('current_hostel', 'current_room', 'current_bed').all()
 
     if search_q:
@@ -300,10 +300,20 @@ def admin_students_manager(request):
             models.Q(registration_number__icontains=search_q)
         )
 
+    if student_type_filter in ['HOSTEL', 'DAY_SCHOLAR']:
+        students = students.filter(student_type=student_type_filter)
+
+    total_count = Student.objects.count()
+    hostel_count = Student.objects.filter(student_type='HOSTEL').count()
+    day_scholar_count = Student.objects.filter(student_type='DAY_SCHOLAR').count()
+
     context = {
-        'students': students[:100],
-        'total_count': students.count(),
+        'students': students[:150],
+        'total_count': total_count,
+        'hostel_count': hostel_count,
+        'day_scholar_count': day_scholar_count,
         'search_q': search_q,
+        'selected_type': student_type_filter,
     }
     return render(request, 'admin_panel/students_manager.html', context)
 
@@ -350,7 +360,8 @@ def admin_update_student_status(request, student_id):
                 student.current_bed = None
                 student.current_room = None
                 student.current_hostel = None
-                student.save(update_fields=['current_bed', 'current_room', 'current_hostel'])
+                student.student_type = 'DAY_SCHOLAR'
+                student.save(update_fields=['current_bed', 'current_room', 'current_hostel', 'student_type'])
                 messages.warning(request, f"Bed de-allocated for student {student.student_id}.")
 
     return redirect('admin_students_manager')

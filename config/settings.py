@@ -7,13 +7,15 @@ import os
 import urllib.parse as urlparse
 from pathlib import Path
 from decimal import Decimal
-from dotenv import load_dotenv
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from .env file if python-dotenv is present
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-hostelx-smart-exchange-management-platform-key-2026')
 
@@ -78,9 +80,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database Configuration: PostgreSQL (Default) with Environment / SQLite fallback
+# Database Configuration: SQLite (Default) with optional PostgreSQL / DATABASE_URL support
 DATABASE_URL = os.getenv('DATABASE_URL')
-DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'django.db.backends.postgresql')
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'django.db.backends.sqlite3')
 
 if DATABASE_URL:
     url = urlparse.urlparse(DATABASE_URL)
@@ -100,18 +102,7 @@ if DATABASE_URL:
             'PORT': str(url.port or 5432) if engine != 'django.db.backends.sqlite3' else '',
         }
     }
-elif DATABASE_ENGINE == 'django.db.backends.sqlite3' or os.getenv('USE_SQLITE', 'False').lower() in ('true', '1', 't'):
-    sqlite_name = os.getenv('DATABASE_NAME', 'db.sqlite3')
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / sqlite_name if not Path(sqlite_name).is_absolute() else Path(sqlite_name),
-            'OPTIONS': {
-                'timeout': 30,  # 30s busy timeout for concurrent access handling
-            }
-        }
-    }
-else:
+elif DATABASE_ENGINE == 'django.db.backends.postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -122,6 +113,17 @@ else:
             'PORT': os.getenv('DATABASE_PORT', '5432'),
             'OPTIONS': {
                 'connect_timeout': int(os.getenv('DATABASE_CONNECT_TIMEOUT', '10')),
+            }
+        }
+    }
+else:
+    sqlite_name = os.getenv('DATABASE_NAME', 'db.sqlite3')
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / sqlite_name if not Path(sqlite_name).is_absolute() else Path(sqlite_name),
+            'OPTIONS': {
+                'timeout': 30,  # 30s busy timeout for concurrent access handling
             }
         }
     }

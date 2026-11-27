@@ -159,3 +159,8 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 # Console email backend for local notifications
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@hostelx.university.edu'
+
+from django.contrib.messages import constants as message_constants
+MESSAGE_TAGS = {
+    message_constants.ERROR: 'danger',
+}

@@ -61,14 +61,23 @@ class DirectBookingAndAdminTests(TestCase):
         )
         StudentAccount.objects.create(student=student)
 
-        # 3. Test logging in with Registration Number (portal=hostel_booking)
+        # 3. Test logging in with Registration Number (portal=hostel_booking shows Day Scholar warning)
         login_res = self.client.post('/accounts/login/', {
             'username': '12313714',
             'password': 'testpassword123',
             'portal': 'hostel_booking'
         })
-        self.assertEqual(login_res.status_code, 302)
-        self.assertEqual(login_res.url, '/dashboard/student/')
+        self.assertEqual(login_res.status_code, 200)
+        self.assertContains(login_res, 'Day Scholar is not eligible for hostel booking.')
+
+        # 4. Day Scholar can still access Fee & Accounts portal
+        fee_login_res = self.client.post('/accounts/login/', {
+            'username': '12313714',
+            'password': 'testpassword123',
+            'portal': 'fee_accounts'
+        })
+        self.assertEqual(fee_login_res.status_code, 302)
+        self.assertEqual(fee_login_res.url, '/finance/my-account/')
 
     def test_admin_control_hub_and_manual_allotment(self):
         self.client.force_login(self.admin_user)

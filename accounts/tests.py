@@ -79,11 +79,15 @@ class LoginAndDayScholarEligibilityTests(TestCase):
             'username': '12313714',
             'password': 'HostelX@2026',
             'portal': 'hostel_booking'
-        }, follow=True)
+        })
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.redirect_chain[-1][0], '/dashboard/student/')
-        self.assertContains(res, 'Day Scholar is not eligible for hostel room booking.')
-        self.assertNotContains(res, 'Eligible to book a hostel room')
+        self.assertContains(res, 'Day Scholar is not eligible for hostel booking.')
+
+        self.client.force_login(self.day_scholar_user)
+        dash_res = self.client.get('/dashboard/student/')
+        self.assertEqual(dash_res.status_code, 200)
+        self.assertContains(dash_res, 'Day Scholar is not eligible for hostel room booking.')
+        self.assertNotContains(dash_res, 'Eligible to book a hostel room')
 
         detail_res = self.client.get(f'/rooms/book/{self.bed.id}/', follow=True)
         self.assertEqual(detail_res.redirect_chain[-1][0], '/dashboard/student/')

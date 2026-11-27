@@ -51,20 +51,27 @@ def login_view(request):
                 messages.error(request, "This account is inactive. Please contact the University Administration.")
                 return render(request, 'accounts/login.html')
 
-            login(request, user)
-
             if user.is_student:
                 student = getattr(user, 'student_profile', None)
+                if student and student.is_day_scholar and portal != 'fee_accounts':
+                    messages.warning(
+                        request,
+                        "Day Scholar is not eligible for hostel booking."
+                    )
+                    return render(request, 'accounts/login.html')
+
+                login(request, user)
                 if student and student.is_day_scholar:
                     messages.warning(
                         request,
-                        "Day Scholar is not eligible for hostel room booking."
+                        "Day Scholar is not eligible for hostel booking."
                     )
                 if portal == 'fee_accounts':
                     return redirect('my_financial_account')
                 else:
                     return redirect('student_dashboard')
             else:
+                login(request, user)
                 return redirect('dashboard_redirect')
         else:
             messages.error(request, "Invalid User ID / Registration Number or Password. Please re-check or use quick demo fill.")

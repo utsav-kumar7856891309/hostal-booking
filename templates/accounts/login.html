@@ -419,7 +419,7 @@
       {% if messages %}
         <div style="width: 100%; max-width: 440px;">
           {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2 px-3 small shadow-sm mb-3" role="alert">
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2 ps-3 pe-5 small shadow-sm mb-3" role="alert">
               {{ message }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>

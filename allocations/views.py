@@ -85,6 +85,10 @@ def room_booking_detail(request, bed_id):
         messages.error(request, "Only students can book hostel beds.")
         return redirect('dashboard_redirect')
 
+    if student.student_type == 'DAY_SCHOLAR':
+        messages.warning(request, "Day Scholar is not eligible for hostel room booking.")
+        return redirect('student_dashboard')
+
     bed = get_object_or_404(Bed.objects.select_related('room', 'room__hostel', 'room__category'), id=bed_id)
 
     if bed.status != 'VACANT':
@@ -131,6 +135,10 @@ def room_booking_confirm(request, bed_id):
     if not student:
         messages.error(request, "Only students can book rooms.")
         return redirect('dashboard_redirect')
+
+    if student.student_type == 'DAY_SCHOLAR':
+        messages.warning(request, "Day Scholar is not eligible for hostel room booking.")
+        return redirect('student_dashboard')
 
     if student.account_status != 'ACTIVE':
         messages.error(request, f"Your account status is {student.get_account_status_display()}. Booking is not allowed.")

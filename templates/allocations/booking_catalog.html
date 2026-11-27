@@ -34,6 +34,13 @@
         Booking a new bed will automatically transfer your allotment and release your current bed for other students.
       </div>
     </div>
+  {% elif student and student.student_type == 'DAY_SCHOLAR' %}
+    <div class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+      <div>
+        <b>Warning:</b> Day Scholar is not eligible for hostel room booking.
+      </div>
+    </div>
   {% elif student and not student.current_bed %}
     <div class="alert alert-success py-2 px-3 small d-flex align-items-center gap-2 mb-4">
       <i class="bi bi-check-circle-fill fs-5"></i>
@@ -126,9 +133,15 @@
             </div>
           </div>
 
-          <a href="{% url 'room_booking_detail' item.bed.id %}" class="btn btn-success btn-sm mt-auto w-100 fw-bold">
-            <i class="bi bi-door-open-fill me-1"></i> Book This Bed
-          </a>
+          {% if student and student.student_type == 'DAY_SCHOLAR' %}
+            <button type="button" class="btn btn-secondary btn-sm mt-auto w-100 fw-bold" disabled>
+              <i class="bi bi-slash-circle me-1"></i> Not Eligible (Day Scholar)
+            </button>
+          {% else %}
+            <a href="{% url 'room_booking_detail' item.bed.id %}" class="btn btn-success btn-sm mt-auto w-100 fw-bold">
+              <i class="bi bi-door-open-fill me-1"></i> Book This Bed
+            </a>
+          {% endif %}
         </div>
       </div>
     {% empty %}

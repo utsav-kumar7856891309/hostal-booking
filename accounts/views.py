@@ -26,8 +26,11 @@ def login_view(request):
 
         # 1. Resolve login_id (Registration Number, Student ID, Email, or Username)
         target_username = login_id
+        matched_user = User.objects.filter(username__iexact=login_id).first()
 
-        if not User.objects.filter(username__iexact=login_id).exists():
+        if matched_user:
+            target_username = matched_user.username
+        else:
             student = Student.objects.filter(
                 models.Q(registration_number__iexact=login_id) |
                 models.Q(student_id__iexact=login_id) |
@@ -52,6 +55,11 @@ def login_view(request):
 
             if user.is_student:
                 student = getattr(user, 'student_profile', None)
+                if student and student.is_day_scholar:
+                    messages.warning(
+                        request,
+                        "Day Scholar is not eligible for hostel room booking."
+                    )
                 if portal == 'fee_accounts':
                     return redirect('my_financial_account')
                 else:
